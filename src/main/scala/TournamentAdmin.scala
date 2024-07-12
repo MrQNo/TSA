@@ -3,6 +3,7 @@ package de.qno.tournamentadmin
 import sttp.client4.*
 import com.github.nscala_time.time.Imports.*
 import org.joda.time.format.ISODateTimeFormat
+import upickle.default.*
 
 enum ChessPlatform:
  case chesscom, lichess
@@ -15,6 +16,13 @@ case class TournamentAdmin()
 object TournamentAdmin:
   val teamID = "deutscher-schachbund-ev-offen"
   val token = "lip_6x0MtZl7vMFLRUVOv3iw"
+
+object DateTimeRW:
+  val fmt = ISODateTimeFormat.dateTime()
+  given ReadWriter[DateTime] = readwriter[ujson.Value].bimap[DateTime](
+    dt => dt.toString,
+    dtstr => fmt.parseDateTime(dtstr.str)
+  )
 
 case class AdminApi(base: String,
                pairingAlgorithm: String,
@@ -114,12 +122,6 @@ def createTournament =
 
 @main
 def main: Unit =
-  val fmt = ISODateTimeFormat.dateTime()
   val dt = DateTime.now()
-  println(dt.toString)
-  val dtstr = fmt.print(dt)
-  println(dtstr)
-  val dt2 = fmt.parseDateTime(dtstr)
-  println(dt2.toString)
+  val jsonDateString = write(dt)
 
-  
