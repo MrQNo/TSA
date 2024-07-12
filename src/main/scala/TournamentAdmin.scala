@@ -2,6 +2,7 @@ package de.qno.tournamentadmin
 
 import sttp.client4.*
 import com.github.nscala_time.time.Imports.*
+import org.joda.time.format.ISODateTimeFormat
 
 enum ChessPlatform:
  case chesscom, lichess
@@ -106,10 +107,19 @@ val warmUp = TournamentSeries(platform = ChessPlatform.lichess,
   val pairingAlgo = lichessArena.pairingAlgorithm
   val createString = ""
   
-
-@main
 def createTournament =
   while warmUp.nextInstance.nextDate < DateTime.now().plusMonths(1)
     do
       warmUp.nextInstance = warmUp.nextNext
+
+@main
+def main: Unit =
+  val fmt = ISODateTimeFormat.dateTime()
+  val dt = DateTime.now()
+  println(dt.toString)
+  val dtstr = fmt.print(dt)
+  println(dtstr)
+  val dt2 = fmt.parseDateTime(dtstr)
+  println(dt2.toString)
+
   
