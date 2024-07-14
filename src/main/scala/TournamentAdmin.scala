@@ -18,11 +18,12 @@ object TournamentAdmin:
   val token = "lip_6x0MtZl7vMFLRUVOv3iw"
 
 object DateTimeRW:
-  val fmt = ISODateTimeFormat.dateTime()
+  private val fmt = ISODateTimeFormat.dateTime()
   given ReadWriter[DateTime] = readwriter[ujson.Value].bimap[DateTime](
     dt => dt.toString,
     dtstr => fmt.parseDateTime(dtstr.str)
   )
+import DateTimeRW.given
 
 case class AdminApi(base: String,
                pairingAlgorithm: String,
@@ -78,7 +79,7 @@ case class TournamentSeries (platform: ChessPlatform,
       (nextInstance.pointerTimes +1) % limits.length, 
       (nextInstance.pointerDays +1) % nextDays.length) 
     
-  def createMap: Map[String, String] = 
+  private def createMap: Map[String, String] =
     Map(
       "name" -> s"$nextInstance.number. $title",
       s"${apiStrings.time}" -> limits(nextInstance.pointerTimes).toString,
@@ -88,7 +89,7 @@ case class TournamentSeries (platform: ChessPlatform,
       s"description" -> description
     ) ++ additionalConds
     
-  def createNextInstance(creationMap: Map[String, String]) = 
+  private def createNextInstance(creationMap: Map[String, String]) =
     basicRequest
       .body(creationMap)
       .post(uri"${apiStrings.base}${apiStrings.pairingAlgorithm}${apiStrings.createString}")
@@ -114,14 +115,14 @@ val warmUp = TournamentSeries(platform = ChessPlatform.lichess,
 
   val pairingAlgo = lichessArena.pairingAlgorithm
   val createString = ""
-  
-def createTournament =
+
+def createTournament(): Unit =
   while warmUp.nextInstance.nextDate < DateTime.now().plusMonths(1)
-    do
-      warmUp.nextInstance = warmUp.nextNext
+  do
+    warmUp.nextInstance = warmUp.nextNext
 
 @main
-def main: Unit =
+def main(): Unit =
   val dt = DateTime.now()
   val jsonDateString = write(dt)
 
