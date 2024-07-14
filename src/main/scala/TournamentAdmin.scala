@@ -147,12 +147,10 @@ def createTournament(): Unit =
 @main
 def main(): Unit =
   val jString = write(TournamentAdmin.nextTournaments)
-  os.write(TournamentAdmin.pathToResources / "calender.json", jString)
+  os.write.over(TournamentAdmin.pathToResources / "calender.json", jString)
   println(jString)
-  val jsonDateString = write(warmUp)
-  os.write(TournamentAdmin.pathToResources / "series.json", jsonDateString)
-  println(jsonDateString)
-  val jsonDateString1= write(untitledTuesday)
-  os.write.append(TournamentAdmin.pathToResources / "series.json", jsonDateString1)
-  println(jsonDateString1)
+  val allSeries: Array[TournamentSeries] = Array(warmUp, untitledTuesday)
+  val jsonDateString = write(allSeries)
+  os.write.over(TournamentAdmin.pathToResources / "series.json", jsonDateString)
+
 
