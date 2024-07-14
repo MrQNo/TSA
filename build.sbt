@@ -10,3 +10,4 @@ lazy val root = (project in file("."))
 libraryDependencies += "com.softwaremill.sttp.client4" %% "core" % "4.0.0-M14"
 libraryDependencies += "com.github.nscala-time" %% "nscala-time" % "2.32.0"
 libraryDependencies += "com.lihaoyi" %% "upickle" % "3.3.1"
+libraryDependencies += "com.lihaoyi" %% "os-lib" % "0.10.2"

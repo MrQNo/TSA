@@ -5,25 +5,28 @@ import com.github.nscala_time.time.Imports.*
 import org.joda.time.format.ISODateTimeFormat
 import upickle.default.*
 
-enum ChessPlatform:
+enum ChessPlatform derives ReadWriter:
  case chesscom, lichess
 
-enum TournamentType:
+enum TournamentType derives ReadWriter:
   case swiss, arena
 
 case class TournamentAdmin()
 
 object TournamentAdmin:
+  val pathToResources: os.Path = os.pwd / "src" / "main" / "resources"
   val teamID = "deutscher-schachbund-ev-offen"
-  val token = "lip_6x0MtZl7vMFLRUVOv3iw"
+  val token: String = os.read(pathToResources / "token.txt")
+  var nextTournaments: Map[LocalDate, (Int, ChessPlatform)] = Map[LocalDate, (Int, ChessPlatform)]()
 
-object DateTimeRW:
+object RWgivens:
   private val fmt = ISODateTimeFormat.dateTime()
   given ReadWriter[DateTime] = readwriter[ujson.Value].bimap[DateTime](
     dt => dt.toString,
     dtstr => fmt.parseDateTime(dtstr.str)
   )
-import DateTimeRW.given
+
+import RWgivens.given
 
 case class AdminApi(base: String,
                pairingAlgorithm: String,
@@ -32,7 +35,7 @@ case class AdminApi(base: String,
                increment: String,
                duration: String,
                startdate: String
-               )
+               ) derives ReadWriter
 
 object lichessArena extends AdminApi (
   base = "https://lichess.org/api",
@@ -58,7 +61,7 @@ case class TournamentInstance( number: Int,
                           nextDate: DateTime,
                           pointerTimes: Int,
                           pointerDays: Int
-                        )
+                        ) derives ReadWriter
 
 case class TournamentSeries (platform: ChessPlatform, 
                              tournamentType: TournamentType,
@@ -70,7 +73,7 @@ case class TournamentSeries (platform: ChessPlatform,
                              limits: Array[Int],
                              increments: Array[Int],
                              nextDays: Array[Int],
-                             additionalConds: Map[String, String]):
+                             additionalConds: Map[String, String]) derives ReadWriter:
   def nextNext: TournamentInstance = 
     val response = createNextInstance(createMap)
     println(response.body)
@@ -113,6 +116,26 @@ val warmUp = TournamentSeries(platform = ChessPlatform.lichess,
     "conditions.teamMember.teamId" -> TournamentAdmin.teamID
   ))
 
+val untitledTuesday = TournamentSeries(platform = ChessPlatform.lichess,
+  tournamentType = TournamentType.swiss,
+  apiStrings = lichessSwiss,
+  title = "Titelloser Dienstag",
+  duration = 11,
+  nextInstance = TournamentInstance(number = 50,
+    nextDate = new DateTime(2024, 8, 13, 20, 1, 0, DateTimeZone.forID("Europe/Berlin")),
+    pointerTimes = 0,
+    pointerDays = 0),
+  description = "11 Runden Schweizer System 3+2 für Spieler unter Blitzwertung 2200",
+  limits = Array(180),
+  increments = Array(2),
+  nextDays = Array(7),
+  additionalConds = Map(
+    "conditions.maxRating.rating" -> "2200",
+    "conditions.playYourGames" -> "true"
+  )
+
+)
+
   val pairingAlgo = lichessArena.pairingAlgorithm
   val createString = ""
 
@@ -123,6 +146,13 @@ def createTournament(): Unit =
 
 @main
 def main(): Unit =
-  val dt = DateTime.now()
-  val jsonDateString = write(dt)
+  val jString = write(TournamentAdmin.nextTournaments)
+  os.write(TournamentAdmin.pathToResources / "calender.json", jString)
+  println(jString)
+  val jsonDateString = write(warmUp)
+  os.write(TournamentAdmin.pathToResources / "series.json", jsonDateString)
+  println(jsonDateString)
+  val jsonDateString1= write(untitledTuesday)
+  os.write.append(TournamentAdmin.pathToResources / "series.json", jsonDateString1)
+  println(jsonDateString1)
 
