@@ -45,6 +45,7 @@ build/
 
 ### Scala ###
 .bsp/
+worksheet.sc
 
 ### Project specific ###
 src/main/resources/token.txt
