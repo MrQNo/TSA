@@ -1,14 +1,17 @@
 package de.qno.tournamentadmin
 
-import TournamentAdmin.*  
+import TournamentAdmin.*
+import TournamentAdmin.ChessPlatform.lichess
+import TournamentAdmin.TournamentType.{arena, swiss}
 
-import sttp.client4.*
-import com.github.nscala_time.time.Imports.*
-import de.qno.tournamentadmin.TournamentAdmin.ChessPlatform.lichess
-import de.qno.tournamentadmin.TournamentAdmin.TournamentType.{arena, swiss}
-import org.joda .time.format.ISODateTimeFormat
 import upickle.default.*
 
+/** describes a tournament series
+ * 
+ * class is stateless, immutable, and threadsafe
+ * 
+ * Two instances for own use added. Deprecated; will be replaced by JSON import.
+ */
 case class TournamentSeries (platform: ChessPlatform,
                              tournamentType: TournamentType,
                              apiStrings: AdminApi,
@@ -21,9 +24,7 @@ case class TournamentSeries (platform: ChessPlatform,
                              additionalConds: Map[String, String]) derives ReadWriter
 end TournamentSeries
 
-object TournamentSeries:
-end TournamentSeries
-
+@deprecated
 object UntitledTuesday extends TournamentSeries(ChessPlatform.lichess,
   TournamentType.swiss,
   TournamentAdmin.AdminApi.lichessSwiss,
@@ -37,6 +38,7 @@ object UntitledTuesday extends TournamentSeries(ChessPlatform.lichess,
     "conditions.playYourGames" -> "true")
 )
 
+@deprecated
 object WarmUp extends TournamentSeries(lichess,
   arena,
   TournamentAdmin.AdminApi.lichessArena,

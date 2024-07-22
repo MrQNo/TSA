@@ -7,6 +7,12 @@ import upickle.default.*
 
 import com.github.nscala_time.time.Imports.DateTime
 
+/**
+ * describes a tournament instance
+ * 
+ * @param series: a TournamentInstance that has all constant information
+ * 
+ */
 case class TournamentInstance( number: Int,
                                nextDate: DateTime,
                                pointerTimes: Int,
