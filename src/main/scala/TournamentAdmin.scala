@@ -1,32 +1,25 @@
 package de.qno.tournamentadmin
 
-import sttp.client4.*
-import com.github.nscala_time.time.Imports.*
-import org.joda.time.format.ISODateTimeFormat
+import TournamentAdmin.{nextTournaments, readCalendar}
 import upickle.default.*
 
-case class TournamentAdmin()
+import scala.collection.mutable
+
+case class TournamentAdmin():
+  def addInstance(tournamentInstance: TournamentInstance) =
+    nextTournaments.enqueue(tournamentInstance)
 
 object TournamentAdmin:
   val pathToResources: os.Path = os.pwd / "src" / "main" / "resources"
   val teamID = "deutscher-schachbund-ev-offen"
   val token: String = os.read(pathToResources / "token.txt")
-  var nextTournaments: Map[LocalDate, (Int, ChessPlatform)] = Map[LocalDate, (Int, ChessPlatform)]()
+  private var nextTournaments: mutable.PriorityQueue[TournamentInstance] = new mutable.PriorityQueue()
 
   enum ChessPlatform derives ReadWriter:
     case chesscom, lichess
 
   enum TournamentType derives ReadWriter:
     case swiss, arena
-
-  object RWgivens:
-    private val fmt = ISODateTimeFormat.dateTime()
-    given ReadWriter[DateTime] = readwriter[ujson.Value].bimap[DateTime](
-      dt => dt.toString,
-      dtstr => fmt.parseDateTime(dtstr.str)
-    )
-
-  import RWgivens.given
 
   case class AdminApi(base: String,
                  pairingAlgorithm: String,
@@ -61,17 +54,14 @@ object TournamentAdmin:
       startdate = "startsAt"
     )
 
-  def createTournament(): Unit =
-    while warmUp.nextInstance.nextDate < DateTime.now().plusMonths(1)
-    do
-      warmUp.nextInstance = warmUp.nextNext
+  def readCalendar =
+    write(nextTournaments)
 
-@main
 def main(): Unit =
-  val jString = write(TournamentAdmin.nextTournaments)
+  val jString = readCalendar
   os.write.over(TournamentAdmin.pathToResources / "calender.json", jString)
   println(jString)
-  val allSeries: Array[TournamentSeries] = Array(warmUp, untitledTuesday)
+  val allSeries: Array[TournamentInstance] = Array(TournamentInstance.warmUp, TournamentInstance.untitledTuesday)
   val jsonDateString = write(allSeries)
   os.write.over(TournamentAdmin.pathToResources / "series.json", jsonDateString)
 
