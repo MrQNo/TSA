@@ -7,6 +7,7 @@ import upickle.default.*
 import TournamentInstance.{nextNext, untitledTuesday, warmUp}
 
 import scala.annotation.tailrec
+import scala.collection.mutable.ListBuffer
 
 /**
  * describes a tournament instance
@@ -20,6 +21,10 @@ case class TournamentInstance(number: Int,
                               pointerDays: Int,
                               series: TournamentSeries) derives ReadWriter:
 
+  /**
+   * Calculates the next TournamentInstance after this
+   * @return the next TournamentInstance
+   */
   def nextTournament: TournamentInstance =
     TournamentInstance(number+1,
       date.plusDays(series.nextDays(pointerDays)),
@@ -52,7 +57,7 @@ case class TournamentInstance(number: Int,
     val resp = basicRequest
       .auth.bearer(TournamentAdmin.token)
       .body(creationMap)
-      .post(uri"${composedUrl}")
+      .post(uri"$composedUrl")
       .response(asString)
       .send(DefaultSyncBackend())
     resp
@@ -76,21 +81,29 @@ object TournamentInstance:
     WarmUp
   )
 
-  val untitledTuesday: TournamentInstance = TournamentInstance(number = 49,
-    date = new DateTime(2024, 8, 6, 20, 1, 0, DateTimeZone.forID("Europe/Berlin")),
+  val untitledTuesday: TournamentInstance = TournamentInstance(number = 53,
+    date = new DateTime(2024, 9, 3, 20, 1, 0, DateTimeZone.forID("Europe/Berlin")),
     pointerTimes = 0,
     pointerDays = 0,
     UntitledTuesday
   )
 
-  def writeInstances(xs: List[TournamentInstance]): Unit =
+  
+  private def writeInstances(xs: List[String]): Unit =
     val jsonInstances = write(xs)
+    // TODO: If for a series, no new instance is created, it’s old JSON entry must remain.
     os.write.over(TournamentAdmin.pathToResources / "instances.json", jsonInstances)
 
+  // TODO: Return type TournamentInstance
   @tailrec
-  def nextNext(nT: TournamentInstance, acc: List[Response[Either[String, String]]]): List[Response[Either[String, String]]] =
+  def nextNext(nT: TournamentInstance, acc: List[Response[Either[String, String]]]): String =
     if nT.date.isAfter(DateTime.now().plusDays(30)) then
-      acc
+      acc match
+        case List() => ""
+        case x :: xs =>
+          x.body match
+            case Right(jso: String) => jso
+            case _ => throw IllegalArgumentException("The required tournament could not be created.")
     else
       val theNextTournament = nT.nextTournament
       val resp = theNextTournament.createInstance(theNextTournament.createMap)
@@ -98,18 +111,10 @@ object TournamentInstance:
 
   @main
   def main(args: String*): Unit =
-    val s = "uiae"
     val responses =
       for
         instance <- List[TournamentInstance](warmUp, untitledTuesday)
       yield
         nextNext(instance, List[Response[Either[String, String]]]())
-    for
-      ser <- responses
-      resp <- ser
-    do
-      println(resp.body match
-        case Left(err: String) => err
-        case Right(jso: String) => jso)
-
-
+    writeInstances(responses)    
+    
