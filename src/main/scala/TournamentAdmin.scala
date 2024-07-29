@@ -1,9 +1,11 @@
 package de.qno.tournamentadmin
 
 import TournamentAdmin.{nextTournaments, readCalendar}
+
 import upickle.default.*
 
 import scala.collection.mutable
+import scala.collection.mutable.ListBuffer
 
 case class TournamentAdmin():
   def addInstance(tournamentInstance: TournamentInstance) =
@@ -14,6 +16,7 @@ object TournamentAdmin:
   val teamID = "deutscher-schachbund-ev-offen"
   val token: String = os.read.lines(pathToResources / "token.txt").head
   private var nextTournaments: mutable.PriorityQueue[TournamentInstance] = new mutable.PriorityQueue()
+  val listOfLastInstancesJSON = ListBuffer[String]()
 
   enum ChessPlatform derives ReadWriter:
     case chesscom, lichess

@@ -12,7 +12,8 @@ import upickle.default.*
  * 
  * Two instances for own use added. Deprecated; will be replaced by JSON import.
  */
-case class TournamentSeries (platform: ChessPlatform,
+case class TournamentSeries (index: Int,
+                             platform: ChessPlatform,
                              tournamentType: TournamentType,
                              apiStrings: AdminApi,
                              title: String,
@@ -24,8 +25,9 @@ case class TournamentSeries (platform: ChessPlatform,
                              additionalConds: Map[String, String]) derives ReadWriter
 end TournamentSeries
 
-object UntitledTuesday extends TournamentSeries(ChessPlatform.lichess,
-  TournamentType.swiss,
+object UntitledTuesday extends TournamentSeries(0,
+  lichess,
+  swiss,
   TournamentAdmin.AdminApi.lichessSwiss,
   "Titelloser Dienstag",
   11,
@@ -37,7 +39,8 @@ object UntitledTuesday extends TournamentSeries(ChessPlatform.lichess,
     "conditions.playYourGames" -> "true")
 )
 
-object WarmUp extends TournamentSeries(lichess,
+object WarmUp extends TournamentSeries(1,
+  lichess,
   arena,
   TournamentAdmin.AdminApi.lichessArena,
   "LiLa-Warm-Up",
