@@ -24,7 +24,6 @@ case class TournamentSeries (platform: ChessPlatform,
                              additionalConds: Map[String, String]) derives ReadWriter
 end TournamentSeries
 
-@deprecated
 object UntitledTuesday extends TournamentSeries(ChessPlatform.lichess,
   TournamentType.swiss,
   TournamentAdmin.AdminApi.lichessSwiss,
@@ -38,7 +37,6 @@ object UntitledTuesday extends TournamentSeries(ChessPlatform.lichess,
     "conditions.playYourGames" -> "true")
 )
 
-@deprecated
 object WarmUp extends TournamentSeries(lichess,
   arena,
   TournamentAdmin.AdminApi.lichessArena,

@@ -12,7 +12,7 @@ case class TournamentAdmin():
 object TournamentAdmin:
   val pathToResources: os.Path = os.pwd / "src" / "main" / "resources"
   val teamID = "deutscher-schachbund-ev-offen"
-  val token: String = os.read(pathToResources / "token.txt")
+  val token: String = os.read.lines(pathToResources / "token.txt").head
   private var nextTournaments: mutable.PriorityQueue[TournamentInstance] = new mutable.PriorityQueue()
 
   enum ChessPlatform derives ReadWriter:
@@ -47,7 +47,7 @@ object TournamentAdmin:
     object lichessSwiss extends AdminApi (
       base = "https://lichess.org/api",
       pairingAlgorithm = "/swiss",
-      createString = s"/new/$TournamentAdmin.teamID",
+      createString = s"/new/${TournamentAdmin.teamID}",
       time = "clock.limit",
       increment = "clock.increment",
       duration = "nbRounds",
@@ -57,7 +57,7 @@ object TournamentAdmin:
   def readCalendar =
     write(nextTournaments)
 
-def main(): Unit =
+def maisn(): Unit =
   val jString = readCalendar
   os.write.over(TournamentAdmin.pathToResources / "calender.json", jString)
   println(jString)
