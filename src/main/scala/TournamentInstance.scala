@@ -7,33 +7,36 @@ import upickle.default.*
 import TournamentInstance.*
 
 import scala.annotation.tailrec
-import scala.collection.mutable.ListBuffer
 
 /**
  * describes a tournament instance
- * 
- * @param series: a TournamentInstance that has all constant information
- * 
+ *
+ * @param index same index as the corresponding series
  */
-case class TournamentInstance(number: Int,
+case class TournamentInstance(index: Int,
+                              number: Int,
                               date: DateTime,
                               pointerTimes: Int,
-                              pointerDays: Int,
-                              series: TournamentSeries) derives ReadWriter:
+                              pointerDays: Int) derives ReadWriter:
 
   /**
    * Calculates the next TournamentInstance after this
    * @return the next TournamentInstance
    */
   def nextTournament: TournamentInstance =
-    TournamentInstance(number+1,
+    TournamentInstance(index, number+1,
       date.plusDays(series.nextDays(pointerDays)),
       (pointerTimes + 1) % series.limits.length,
-      (pointerDays + 1) % series.nextDays.length,
-      series)
+      (pointerDays + 1) % series.nextDays.length)
+
+  def series: TournamentSeries =
+    index match
+      case 0 => UntitledTuesday
+      case 1 => WarmUp
 
   /**
    * creates the property map to transmit for creation
+   *
    * @return the map
    */
   def createMap: Map[String, String] =
@@ -74,29 +77,33 @@ object TournamentInstance:
     )
   import RWgivens.given
 
-  val warmUp: TournamentInstance = TournamentInstance(number = 103,
-    date = new DateTime(2024, 8, 29, 19, 1, 0, DateTimeZone.forID("Europe/Berlin")),
+  val warmUp: TournamentInstance = TournamentInstance(index = 1, number = 106,
+    date = new DateTime(2024, 9, 9, 19, 1, 0, DateTimeZone.forID("Europe/Berlin")),
     pointerTimes = 2,
-    pointerDays = 1,
-    WarmUp
+    pointerDays = 1
   )
 
-  val untitledTuesday: TournamentInstance = TournamentInstance(number = 53,
-    date = new DateTime(2024, 9, 3, 20, 1, 0, DateTimeZone.forID("Europe/Berlin")),
+  val untitledTuesday: TournamentInstance = TournamentInstance(index = 0, number = 54,
+    date = new DateTime(2024, 9, 10, 20, 1, 0, DateTimeZone.forID("Europe/Berlin")),
     pointerTimes = 0,
-    pointerDays = 0,
-    UntitledTuesday
+    pointerDays = 0
   )
 
+  /**
+   * creates next tournament of given tournament, if it is less than 30 days in the future.
+   *
+   * @param nT the given tournament
+   * @param acc a list of previously created tournaments of the same series
+   * @return only the newest created tournament of that series together with the series index
+   */
   @tailrec
   def nextNext(nT: TournamentInstance, acc: List[Response[Either[String, String]]]): (Int, String) =
     if nT.date.isAfter(DateTime.now().plusDays(30)) then
-      val idx = nT.series.index
       acc match
-        case List() => (idx, "")
-        case x :: xs =>
+        case List() => (nT.index, "")
+        case x :: xs => // TODO: transferring ALL created instances to the Admin calendar
           x.body match
-            case Right(jso: String) => (idx, jso)
+            case Right(jso: String) => (nT.index, jso)
             case _ => throw IllegalArgumentException("The required tournament could not be created.")
     else
       val theNextTournament = nT.nextTournament
@@ -105,13 +112,11 @@ object TournamentInstance:
 
   @main
   def main(args: String*): Unit =
-    val responses =
+    // TODO: This works not correct. I need two things: the json responses for the Admin calendar AND the TournamentInstance of the resp. last instance.
+    val responses = // contains the latest instance of each series
       for
         instance <- List[TournamentInstance](warmUp, untitledTuesday)
       yield
         nextNext(instance, List[Response[Either[String, String]]]())
-    for 
-      pair <- responses
-    do 
-      TournamentAdmin.listOfLastInstancesJSON(pair._1) = pair._2
-    os.write.over(TournamentAdmin.pathToResources, TournamentAdmin.listOfLastInstancesJSON)  
+    os.write.over(TournamentAdmin.pathToResources / "instances.json", write(responses.sortBy(_._1).map(_._2)))
+    os.write.over(TournamentAdmin.pathToResources / "series.json", write(List(UntitledTuesday, WarmUp).sortBy(_.index)))
