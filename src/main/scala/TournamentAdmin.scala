@@ -1,21 +1,19 @@
 package de.qno.tournamentadmin
 
-import TournamentAdmin.{nextTournaments, readCalendar}
+import TournamentAdmin.nextTournaments
 
 import upickle.default.*
 
 import scala.collection.mutable
 import scala.collection.mutable.ListBuffer
 
-case class TournamentAdmin():
-  def addInstance(tournamentInstance: TournamentInstance) =
-    nextTournaments.enqueue(tournamentInstance)
+case class TournamentAdmin()
 
 object TournamentAdmin:
   val pathToResources: os.Path = os.pwd / "src" / "main" / "resources"
   val teamID = "deutscher-schachbund-ev-offen"
   val token: String = os.read.lines(pathToResources / "token.txt").head
-  private var nextTournaments: mutable.PriorityQueue[TournamentInstance] = new mutable.PriorityQueue()
+  var nextTournaments: ListBuffer[String] = new ListBuffer()
 
   enum ChessPlatform derives ReadWriter:
     case chesscom, lichess
@@ -33,7 +31,7 @@ object TournamentAdmin:
                  ) derives ReadWriter
   
   object AdminApi:
-    val pairingAlgo = lichessArena.pairingAlgorithm
+    val pairingAlgo: String = lichessArena.pairingAlgorithm
     val createString = ""
 
     object lichessArena extends AdminApi (
@@ -55,16 +53,3 @@ object TournamentAdmin:
       duration = "nbRounds",
       startdate = "startsAt"
     )
-
-  def readCalendar =
-    write(nextTournaments)
-
-def maisn(): Unit =
-  val jString = readCalendar
-  os.write.over(TournamentAdmin.pathToResources / "calender.json", jString)
-  println(jString)
-  val allSeries: Array[TournamentInstance] = Array(TournamentInstance.warmUp, TournamentInstance.untitledTuesday)
-  val jsonDateString = write(allSeries)
-  os.write.over(TournamentAdmin.pathToResources / "series.json", jsonDateString)
-
-

@@ -77,14 +77,14 @@ object TournamentInstance:
     )
   import RWgivens.given
 
-  val warmUp: TournamentInstance = TournamentInstance(index = 1, number = 106,
-    date = new DateTime(2024, 9, 9, 19, 1, 0, DateTimeZone.forID("Europe/Berlin")),
+  val warmUp: TournamentInstance = TournamentInstance(index = 1, number = 109,
+    date = new DateTime(2024, 9, 20, 19, 1, 0, DateTimeZone.forID("Europe/Berlin")),
     pointerTimes = 2,
-    pointerDays = 1
+    pointerDays = 0
   )
 
-  val untitledTuesday: TournamentInstance = TournamentInstance(index = 0, number = 54,
-    date = new DateTime(2024, 9, 10, 20, 1, 0, DateTimeZone.forID("Europe/Berlin")),
+  val untitledTuesday: TournamentInstance = TournamentInstance(index = 0, number = 56,
+    date = new DateTime(2024, 9, 24, 20, 1, 0, DateTimeZone.forID("Europe/Berlin")),
     pointerTimes = 0,
     pointerDays = 0
   )
@@ -97,26 +97,27 @@ object TournamentInstance:
    * @return only the newest created tournament of that series together with the series index
    */
   @tailrec
-  def nextNext(nT: TournamentInstance, acc: List[Response[Either[String, String]]]): (Int, String) =
+  def nextNext(nT: TournamentInstance, acc: List[Response[Either[String, String]]]): (TournamentInstance, String) =
+    val theNextTournament = nT.nextTournament
+    val resp = theNextTournament.createInstance(theNextTournament.createMap)
     if nT.date.isAfter(DateTime.now().plusDays(30)) then
       acc match
-        case List() => (nT.index, "")
+        case List() => (theNextTournament, "")
         case x :: xs => // TODO: transferring ALL created instances to the Admin calendar
           x.body match
-            case Right(jso: String) => (nT.index, jso)
+            case Right(jso: String) => (theNextTournament, jso)
             case _ => throw IllegalArgumentException("The required tournament could not be created.")
     else
-      val theNextTournament = nT.nextTournament
-      val resp = theNextTournament.createInstance(theNextTournament.createMap)
       nextNext(theNextTournament, resp :: acc)
 
   @main
   def main(args: String*): Unit =
-    // TODO: This works not correct. I need two things: the json responses for the Admin calendar AND the TournamentInstance of the resp. last instance.
     val responses = // contains the latest instance of each series
       for
         instance <- List[TournamentInstance](warmUp, untitledTuesday)
       yield
         nextNext(instance, List[Response[Either[String, String]]]())
-    os.write.over(TournamentAdmin.pathToResources / "instances.json", write(responses.sortBy(_._1).map(_._2)))
+    os.write.over(TournamentAdmin.pathToResources / "instances.json", write(responses.sortBy(_._1.index).map(_._1)))
+    TournamentAdmin.nextTournaments.addAll(responses.map(_._2))
+    os.write.over(TournamentAdmin.pathToResources / "calendar.json", write(TournamentAdmin.nextTournaments))
     os.write.over(TournamentAdmin.pathToResources / "series.json", write(List(UntitledTuesday, WarmUp).sortBy(_.index)))
