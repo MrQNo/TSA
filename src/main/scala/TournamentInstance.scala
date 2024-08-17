@@ -31,7 +31,10 @@ case class TournamentInstance(index: Int,
       (pointerDays + 1) % series.nextDays.length)
 
   def series: TournamentSeries =
-    TournamentSeries.seriesList.find(this.index == _.index)
+    val corrSer = TournamentSeries.seriesList.find(this.index == _.index)
+    corrSer match
+      case Some(x) => x
+      case None => throw new IllegalStateException("No corresponding series found for this instance.")
 
   /**
    * creates the property map to transmit for creation

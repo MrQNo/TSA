@@ -29,7 +29,7 @@ object TournamentSeries:
   var seriesList: List[TournamentSeries] = init()
   
   def save(): Unit =
-    os.write.over(TournamentAdmin.pathToResources / "series.json", write(List(UntitledTuesday, WarmUp).sortBy(_.index)))
+    os.write.over(TournamentAdmin.pathToResources / "series.json", write(seriesList.sortBy(_.index)))
 
   def init(): List[TournamentSeries] =
     read[List[TournamentSeries]](os.read(TournamentAdmin.pathToResources / "series.json"))
