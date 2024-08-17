@@ -25,30 +25,11 @@ case class TournamentSeries (index: Int,
                              additionalConds: Map[String, String]) derives ReadWriter
 end TournamentSeries
 
-object UntitledTuesday extends TournamentSeries(0,
-  lichess,
-  swiss,
-  TournamentAdmin.AdminApi.lichessSwiss,
-  "Titelloser Dienstag",
-  11,
-  "11 Runden Schweizer System 3+2 für Spieler unter Blitzwertung 2200",
-  Array(180),
-  Array(2),
-  Array(7),
-  Map("conditions.maxRating.rating" -> "2200",
-    "conditions.playYourGames" -> "true")
-)
+object TournamentSeries:
+  var seriesList: List[TournamentSeries] = init()
+  
+  def save(): Unit =
+    os.write.over(TournamentAdmin.pathToResources / "series.json", write(List(UntitledTuesday, WarmUp).sortBy(_.index)))
 
-object WarmUp extends TournamentSeries(1,
-  lichess,
-  arena,
-  TournamentAdmin.AdminApi.lichessArena,
-  "LiLa-Warm-Up",
-  55,
-  "Warm-Up-Arena für die Lichess Liga (immer mit der gleichen Bedenkzeit)",
-  Array(3, 3, 5),
-  Array(0, 2, 0),
-  Array(3, 4),
-  Map("conditions.teamMember.teamId" -> TournamentAdmin.teamID)
-)
-
+  def init(): List[TournamentSeries] =
+    read[List[TournamentSeries]](os.read(TournamentAdmin.pathToResources / "series.json"))

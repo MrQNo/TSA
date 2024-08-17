@@ -1,12 +1,13 @@
 package de.qno.tournamentadmin
 
 import sttp.client4.*
-import org.joda.time.{DateTime, DateTimeZone}
+import org.joda.time.DateTime
 import org.joda.time.format.ISODateTimeFormat
 import upickle.default.*
 import TournamentInstance.*
 
 import scala.annotation.tailrec
+import scala.collection.mutable.ListBuffer
 
 /**
  * describes a tournament instance
@@ -30,9 +31,7 @@ case class TournamentInstance(index: Int,
       (pointerDays + 1) % series.nextDays.length)
 
   def series: TournamentSeries =
-    index match
-      case 0 => UntitledTuesday
-      case 1 => WarmUp
+    TournamentSeries.seriesList.find(this.index == _.index)
 
   /**
    * creates the property map to transmit for creation
@@ -66,6 +65,7 @@ case class TournamentInstance(index: Int,
     resp
 
 object TournamentInstance:
+  var instances: List[TournamentInstance] = init()
   given Ordering[TournamentInstance] =
     Ordering.fromLessThan((first, second) => first.date.isBefore(second.date))
 
@@ -76,18 +76,6 @@ object TournamentInstance:
       dtstr => fmt.parseDateTime(dtstr.str)
     )
   import RWgivens.given
-
-  val warmUp: TournamentInstance = TournamentInstance(index = 1, number = 109,
-    date = new DateTime(2024, 9, 20, 19, 1, 0, DateTimeZone.forID("Europe/Berlin")),
-    pointerTimes = 2,
-    pointerDays = 0
-  )
-
-  val untitledTuesday: TournamentInstance = TournamentInstance(index = 0, number = 56,
-    date = new DateTime(2024, 9, 24, 20, 1, 0, DateTimeZone.forID("Europe/Berlin")),
-    pointerTimes = 0,
-    pointerDays = 0
-  )
 
   /**
    * creates next tournament of given tournament, if it is less than 30 days in the future.
@@ -110,14 +98,29 @@ object TournamentInstance:
     else
       nextNext(theNextTournament, resp :: acc)
 
-  @main
-  def main(args: String*): Unit =
-    val responses = // contains the latest instance of each series
+  /**
+   * directs the creation of new tournaments.
+   * 
+   * Side effects on TournamentInstance.instances and TournamentAdmin.nextTournaments
+   */
+  def creation(): Unit =
+    val responses =
       for
-        instance <- List[TournamentInstance](warmUp, untitledTuesday)
+        instance <- instances
       yield
         nextNext(instance, List[Response[Either[String, String]]]())
-    os.write.over(TournamentAdmin.pathToResources / "instances.json", write(responses.sortBy(_._1.index).map(_._1)))
+    instances = responses.sortBy(_._1.index).map(_._1)
+    TournamentAdmin.add(responses.map(_._2))
+
+  def save(responses: List[(TournamentInstance, String)]): Unit =
+    os.write.over(TournamentAdmin.pathToResources / "instances.json", write(instances))
     TournamentAdmin.nextTournaments.addAll(responses.map(_._2))
-    os.write.over(TournamentAdmin.pathToResources / "calendar.json", write(TournamentAdmin.nextTournaments))
-    os.write.over(TournamentAdmin.pathToResources / "series.json", write(List(UntitledTuesday, WarmUp).sortBy(_.index)))
+
+  def init(): List[TournamentInstance] =
+    read[List[TournamentInstance]](os.read(TournamentAdmin.pathToResources / "instances.json"))
+
+  @main
+  def main(): Unit =
+    println(TournamentAdmin.nextTournaments)
+    println(TournamentSeries.seriesList)
+    println(instances)
