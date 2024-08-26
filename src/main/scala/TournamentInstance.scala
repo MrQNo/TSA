@@ -13,6 +13,10 @@ import scala.collection.mutable.ListBuffer
  * describes a tournament instance
  *
  * @param index same index as the corresponding series
+ * @param number the running number of the current instance in its series
+ * @param date the start date
+ * @param pointerTimes the pointer at the ToR of the current instance in the series' ToR array
+ * @param pointerDays the pointer at the days until next instance of the current instance in the series' days until next instance array
  */
 case class TournamentInstance(index: Int,
                               number: Int,
@@ -57,18 +61,18 @@ case class TournamentInstance(index: Int,
    * @param creationMap API-conform map of properties
    * @return a Either[String, String] The Right string is in JSON format.
    */
-  def createInstance(creationMap: Map[String, String]): Response[Either[String, String]] =
+  def createInstance(creationMap: Map[String, String]): Unit =
     val composedUrl = s"${series.apiStrings.base}${series.apiStrings.pairingAlgorithm}${series.apiStrings.createString}"
-    val resp = basicRequest
+    basicRequest
       .auth.bearer(TournamentAdmin.token)
       .body(creationMap)
       .post(uri"$composedUrl")
-      .response(asString)
+      .response(asString.getRight)
       .send(DefaultSyncBackend())
-    resp
 
 object TournamentInstance:
-  var instances: List[TournamentInstance] = init()
+  private val instances: Array[TournamentInstance] = init().toArray
+
   given Ordering[TournamentInstance] =
     Ordering.fromLessThan((first, second) => first.date.isBefore(second.date))
 
@@ -84,36 +88,29 @@ object TournamentInstance:
    * creates next tournament of given tournament, if it is less than 30 days in the future.
    *
    * @param nT the given tournament
-   * @param acc a list of previously created tournaments of the same series
    * @return only the newest created tournament of that series together with the series index
    */
   @tailrec
-  def nextNext(nT: TournamentInstance, acc: List[Response[Either[String, String]]]): (TournamentInstance, String) =
+  def nextNext(nT: TournamentInstance): TournamentInstance =
     val theNextTournament = nT.nextTournament
-    val resp = theNextTournament.createInstance(theNextTournament.createMap)
+    theNextTournament.createInstance(theNextTournament.createMap)
     if nT.date.isAfter(DateTime.now().plusDays(30)) then
-      acc match
-        case List() => (theNextTournament, "")
-        case x :: xs => // TODO: transferring ALL created instances to the Admin calendar
-          x.body match
-            case Right(jso: String) => (theNextTournament, jso)
-            case _ => throw IllegalArgumentException("The required tournament could not be created.")
+      theNextTournament
     else
-      nextNext(theNextTournament, resp :: acc)
+      nextNext(theNextTournament)
 
   /**
    * directs the creation of new tournaments.
    * 
    * Side effects on TournamentInstance.instances and TournamentAdmin.nextTournaments
    */
-  def creation(): Unit =
+  def creation(): List[TournamentInstance] =
     val responses =
       for
         instance <- instances
       yield
-        nextNext(instance, List[Response[Either[String, String]]]())
-    instances = responses.sortBy(_._1.index).map(_._1)
-    TournamentAdmin.add(responses.map(_._2))
+        nextNext(instance)
+    responses.sortBy(_.index)
 
   def save(responses: List[(TournamentInstance, String)]): Unit =
     os.write.over(TournamentAdmin.pathToResources / "instances.json", write(instances))
@@ -124,6 +121,10 @@ object TournamentInstance:
 
   @main
   def main(): Unit =
-    println(TournamentAdmin.nextTournaments)
-    println(TournamentSeries.seriesList)
+    for
+      instance <- creation()
+    do
+      val ind = instance.index
+      instances(ind) = instance
+
     println(instances)
