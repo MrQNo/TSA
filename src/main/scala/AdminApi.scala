@@ -2,7 +2,8 @@ package de.qno.tournamentadmin
 
 import upickle.default.*
 
-case class AdminApi(base: String,
+case class AdminApi(serv: String,
+                    base: String,
                     pairingAlgorithm: String,
                     createString: String,
                     time: String,
@@ -12,10 +13,10 @@ case class AdminApi(base: String,
                    ) derives ReadWriter
 
 object AdminApi:
-  val pairingAlgo: String = lichessArena.pairingAlgorithm
   val createString = ""
 
   object lichessArena extends AdminApi (
+    serv = "https://lichess.org",
     base = "https://lichess.org/api",
     pairingAlgorithm = "/tournament",
     createString = "",
@@ -26,9 +27,10 @@ object AdminApi:
   )
 
   object lichessSwiss extends AdminApi (
+    serv = "https://lichess.org",
     base = "https://lichess.org/api",
     pairingAlgorithm = "/swiss",
-    createString = s"/new/${TournamentAdmin.teamID}",
+    createString = s"/new/${TournamentEntry.teamID}",
     time = "clock.limit",
     increment = "clock.increment",
     duration = "nbRounds",

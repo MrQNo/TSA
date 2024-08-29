@@ -1,8 +1,8 @@
 package de.qno.tournamentadmin
 
-import TournamentAdmin.*
-import TournamentAdmin.ChessPlatform.lichess
-import TournamentAdmin.TournamentType.{arena, swiss}
+import TournamentEntry.*
+import TournamentEntry.ChessPlatform.lichess
+import TournamentEntry.TournamentType.{arena, swiss}
 
 import upickle.default.*
 
@@ -29,7 +29,7 @@ object TournamentSeries:
   var seriesList: List[TournamentSeries] = init()
   
   def save(): Unit =
-    os.write.over(TournamentAdmin.pathToResources / "series.json", write(seriesList.sortBy(_.index)))
+    os.write.over(TournamentEntry.pathToResources / "series.json", write(seriesList.sortBy(_.index)))
 
   def init(): List[TournamentSeries] =
-    read[List[TournamentSeries]](os.read(TournamentAdmin.pathToResources / "series.json"))
+    read[List[TournamentSeries]](os.read(TournamentEntry.pathToResources / "series.json"))
