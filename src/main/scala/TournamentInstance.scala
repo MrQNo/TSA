@@ -93,10 +93,10 @@ object TournamentInstance:
   @tailrec
   def nextNext(nT: TournamentInstance): TournamentInstance =
     val theNextTournament = nT.nextTournament
-    theNextTournament.createInstance(theNextTournament.createMap)
-    if nT.date.isAfter(DateTime.now().plusDays(30)) then
-      theNextTournament
+    if theNextTournament.date.isAfter(DateTime.now().plusDays(30)) then
+      nT
     else
+      theNextTournament.createInstance(theNextTournament.createMap)
       nextNext(theNextTournament)
 
   /**

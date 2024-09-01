@@ -24,12 +24,6 @@ object TournamentEntry:
   enum TournamentType derives ReadWriter:
     case swiss, arena
 
-  def save(): Unit =
-    os.write.over(TournamentEntry.pathToResources / "calendar.json", write(todaYesterday))
-
-  def init(): List[TournamentEntry] =
-    read[List[TournamentEntry]](os.read(TournamentEntry.pathToResources / "calendar.json"))  
-    
   @main
   def readTeamsLichessTournaments: Unit =
     val respA = basicRequest
@@ -52,6 +46,7 @@ object TournamentEntry:
   def chooseTodaysTournaments: Unit =
     val text = new ListBuffer[String]()
     text.addOne("Heutige Turniere:\n")
+    var todaysTournameets: List[TournamentEntry] = List()
     for
       tournament <- os.read.lines.stream(TournamentEntry.pathToResources / "arena.json")
     do
@@ -64,8 +59,9 @@ object TournamentEntry:
         val idt = json("id").str
         text.addOne(s"$time Uhr: $fullname ${lichessArena.serv}${lichessArena.pairingAlgorithm}$idt\n")
         val newEntry = TournamentEntry(idt, ChessPlatform.lichess, TournamentType.arena)
-        todaYesterday = todaYesterday :+ newEntry
+        todaysTournameets = todaysTournameets :+ newEntry
     end for
+    
     for
       tournament <- os.read.lines.stream(TournamentEntry.pathToResources / "swiss.json")
     do
@@ -78,8 +74,15 @@ object TournamentEntry:
         val idt = json("id").str
         text.addOne(s"$time Uhr: $fullname ${lichessSwiss.serv}${lichessSwiss.pairingAlgorithm}$idt\n")
         val newEntry = TournamentEntry(idt, ChessPlatform.lichess, TournamentType.arena)
-        todaYesterday = todaYesterday :+ newEntry
+        todaysTournameets = todaysTournameets :+ newEntry
     end for
-    save()
-    print(text.foldLeft("")(_ + _))
+    
+    if (!text.isEmpty) then
+      basicRequest
+       .auth.bearer(TournamentEntry.token)
+       .body(Map("message" -> text.foldLeft("")(_ + _)))
+       .post(uri"https://lichess.org/team/deutscher-schachbund-ev-offen/pm-all")
+       .response(asString.getRight)
+       .send(DefaultSyncBackend())
+      print(text.foldLeft("")(_ + _))
 
