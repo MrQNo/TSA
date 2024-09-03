@@ -1,10 +1,10 @@
 package de.qno.tournamentadmin
 
-import de.qno.tournamentadmin.TournamentEntry.{TournamentType, ChessPlatform}
+import TournamentEntry.{TournamentType, ChessPlatform}
 import upickle.default.*
 import sttp.client4.*
 import org.joda.time.*
-import de.qno.tournamentadmin.AdminApi.*
+import AdminApi.*
 
 import scala.collection.mutable.ListBuffer
 
@@ -16,7 +16,6 @@ object TournamentEntry:
   val pathToResources: os.Path = os.pwd / "src" / "main" / "resources"
   val teamID = "deutscher-schachbund-ev-offen"
   val token: String = os.read.lines(pathToResources / "token.txt").head
-  var todaYesterday: List[TournamentEntry] = List()
   
   enum ChessPlatform derives ReadWriter:
     case chesscom, lichess
@@ -40,44 +39,45 @@ object TournamentEntry:
       .response(asString.getRight)
       .send(DefaultSyncBackend())
 
-    os.write.append(TournamentEntry.pathToResources / "swiss.json", respS.body)
+    os.write.over(TournamentEntry.pathToResources / "swiss.json", respS.body)
 
   @main
   def chooseTodaysTournaments: Unit =
     val text = new ListBuffer[String]()
     text.addOne("Heutige Turniere:\n")
-    var todaysTournameets: List[TournamentEntry] = List()
+    var todaysTournaments: List[TournamentEntry] = List()
+    
     for
       tournament <- os.read.lines.stream(TournamentEntry.pathToResources / "arena.json")
     do
       val json: ujson.Value = ujson.read(tournament)
       val date = new DateTime(json("startsAt").num.toLong)
       val day = new LocalDate(date)
-      if (day.equals(new LocalDate())) then
+      if day.equals(new LocalDate()) then
         val time = new LocalTime(date).toString("HH:mm")
         val fullname = json("fullName").str
         val idt = json("id").str
         text.addOne(s"$time Uhr: $fullname ${lichessArena.serv}${lichessArena.pairingAlgorithm}$idt\n")
         val newEntry = TournamentEntry(idt, ChessPlatform.lichess, TournamentType.arena)
-        todaysTournameets = todaysTournameets :+ newEntry
+        todaysTournaments = todaysTournaments :+ newEntry
     end for
     
     for
       tournament <- os.read.lines.stream(TournamentEntry.pathToResources / "swiss.json")
     do
       val json: ujson.Value = ujson.read(tournament)
-      val date = org.joda.time.DateTime.parse(json("startsAt").str).toLocalDate()
+      val date = org.joda.time.DateTime.parse(json("startsAt").str).toDateTime(DateTimeZone.getDefault)
       val day = new LocalDate(date)
-      if (day.equals(new LocalDate())) then
+      if day.equals(new LocalDate()) then
         val time = new LocalTime(date).toString("HH:mm")
         val fullname = json("name").str
         val idt = json("id").str
         text.addOne(s"$time Uhr: $fullname ${lichessSwiss.serv}${lichessSwiss.pairingAlgorithm}$idt\n")
         val newEntry = TournamentEntry(idt, ChessPlatform.lichess, TournamentType.arena)
-        todaysTournameets = todaysTournameets :+ newEntry
+        todaysTournaments = todaysTournaments :+ newEntry
     end for
     
-    if (!text.isEmpty) then
+    if text.nonEmpty then
       basicRequest
        .auth.bearer(TournamentEntry.token)
        .body(Map("message" -> text.foldLeft("")(_ + _)))
