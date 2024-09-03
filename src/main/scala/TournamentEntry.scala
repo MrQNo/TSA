@@ -15,7 +15,10 @@ case class TournamentEntry(id: String,
 object TournamentEntry:
   val pathToResources: os.Path = os.pwd / "src" / "main" / "resources"
   val teamID = "deutscher-schachbund-ev-offen"
-  val token: String = os.read.lines(pathToResources / "token.txt").head
+  val bsUser = "onlineschach@schachbund.de"
+  val secrets = os.read.lines(pathToResources / "token.txt")
+  val token = secrets.head
+  val bsPassword = secrets.tail.head
   
   enum ChessPlatform derives ReadWriter:
     case chesscom, lichess
@@ -78,11 +81,17 @@ object TournamentEntry:
     end for
     
     if text.nonEmpty then
+      val textString = text.foldLeft("")(_ + _)
       basicRequest
        .auth.bearer(TournamentEntry.token)
-       .body(Map("message" -> text.foldLeft("")(_ + _)))
+       .body(Map("message" -> textString))
        .post(uri"https://lichess.org/team/deutscher-schachbund-ev-offen/pm-all")
        .response(asString.getRight)
        .send(DefaultSyncBackend())
-      print(text.foldLeft("")(_ + _))
+
+      val bsResponse = Bluesky.createSession(bsUser, bsPassword)
+      val bsAccessToken = bsResponse._1
+      val bsHandle = bsResponse._2
+      val bsSuccess = Bluesky.createRecord(bsAccessToken, bsHandle, textString)
+      print(textString)
 
