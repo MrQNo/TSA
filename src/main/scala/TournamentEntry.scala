@@ -57,7 +57,7 @@ object TournamentEntry:
         val time = new LocalTime(date).toString("HH:mm")
         val fullname = json("fullName").str
         val idt = json("id").str
-        text.addOne(s"$time Uhr: $fullname ${lichessArena.serv}${lichessArena.pairingAlgorithm}$idt\n")
+        text.addOne(s"$time Uhr: $fullname ${lichessArena.serv}${lichessArena.pairingAlgorithm}/$idt\n")
         val newEntry = TournamentEntry(idt, ChessPlatform.lichess, TournamentType.arena)
         todaysTournaments = todaysTournaments :+ newEntry
     end for
@@ -72,7 +72,7 @@ object TournamentEntry:
         val time = new LocalTime(date).toString("HH:mm")
         val fullname = json("name").str
         val idt = json("id").str
-        text.addOne(s"$time Uhr: $fullname ${lichessSwiss.serv}${lichessSwiss.pairingAlgorithm}$idt\n")
+        text.addOne(s"$time Uhr: $fullname ${lichessSwiss.serv}${lichessSwiss.pairingAlgorithm}/$idt\n")
         val newEntry = TournamentEntry(idt, ChessPlatform.lichess, TournamentType.arena)
         todaysTournaments = todaysTournaments :+ newEntry
     end for
