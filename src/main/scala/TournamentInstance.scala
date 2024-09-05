@@ -1,15 +1,12 @@
 package de.qno.tournamentadmin
 
-import sttp.client4.*
 import org.joda.time.DateTime
 import org.joda.time.format.ISODateTimeFormat
 import upickle.default.*
 import TournamentAdmin.TournamentType
-
-import de.qno.tournamentadmin.TournamentAdmin.TournamentType.LichessSwiss
+import TournamentAdmin.TournamentType.*
 
 import scala.annotation.tailrec
-import scala.collection.mutable.ListBuffer
 
 /**
  * describes a tournament instance
@@ -30,13 +27,13 @@ case class TournamentInstance(index: Int,
    * Calculates the next TournamentInstance after this
    * @return the next TournamentInstance
    */
-  def nextTournament: TournamentInstance =
+  private def nextTournament: TournamentInstance =
     TournamentInstance(index, number+1,
       date.plusDays(series.nextDays(pointerDays)),
       (pointerTimes + 1) % series.limits.length,
       (pointerDays + 1) % series.nextDays.length)
 
-  def series: TournamentSeries =
+  private def series: TournamentSeries =
     val corrSer = TournamentSeries.seriesList.find(this.index == _.index)
     corrSer match
       case Some(x) => x
@@ -48,7 +45,7 @@ case class TournamentInstance(index: Int,
    */
   def createOnline: String =
     series.tournamentType match
-      case LichessArena => LichessApi.createArena(s"${this.number}. ${this.series.title}",
+      case TournamentType.LichessArena => LichessApi.createArena(s"${this.number}. ${this.series.title}",
         series.limits(pointerTimes).toString,
         series.increments(pointerTimes).toString,
         series.duration.toString,
@@ -83,12 +80,12 @@ object TournamentInstance:
    * @return only the newest created tournament of that series together with the series index
    */
   @tailrec
-  def nextNext(nT: TournamentInstance): TournamentInstance =
+  private def nextNext(nT: TournamentInstance): TournamentInstance =
     val theNextTournament = nT.nextTournament
     if theNextTournament.date.isAfter(DateTime.now().plusDays(30)) then
       nT
     else
-      theNextTournament.createOnline(theNextTournament.createMap)
+      theNextTournament.createOnline
       nextNext(theNextTournament)
 
   /**
@@ -104,10 +101,10 @@ object TournamentInstance:
         nextNext(instance)
     responses.sortBy(_.index).toList
 
-  def save(): Unit =
+  private def save(): Unit =
     os.write.over(TournamentAdmin.pathToResources / "instances.json", write(instances))
 
-  def init(): List[TournamentInstance] =
+  private def init(): List[TournamentInstance] =
     read[List[TournamentInstance]](os.read(TournamentAdmin.pathToResources / "instances.json"))
 
   @main

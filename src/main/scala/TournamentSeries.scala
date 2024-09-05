@@ -1,8 +1,6 @@
 package de.qno.tournamentadmin
 
-import TournamentAdmin.*
-import TournamentAdmin.ChessPlatform.lichess
-import TournamentAdmin.TournamentType.{arena, swiss}
+import TournamentAdmin.TournamentType
 
 import upickle.default.*
 

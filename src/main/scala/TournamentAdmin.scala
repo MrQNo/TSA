@@ -15,7 +15,10 @@ import org.joda.time.*
 object TournamentAdmin:
   val pathToResources: os.Path = os.pwd / "src" / "main" / "resources"
   val teamID = "deutscher-schachbund-ev-offen"
-  val token: String = os.read.lines(pathToResources / "token.txt").head
+  val bsUser = "onlineschach@schachbund.de"
+  val secrets = os.read.lines(pathToResources / "token.txt")
+  val token = secrets.head
+  val bsPassword = secrets.tail.head
   
   enum TournamentType derives ReadWriter:
     case LichessSwiss, LichessArena
@@ -94,5 +97,8 @@ object TournamentAdmin:
 
     if text.nonEmpty then
       LichessApi.sendMessage(text)
+      val bsResponse = Bluesky.createSession(bsUser, bsPassword)
+      val bsAccessToken = bsResponse._1
+      val bsHandle = bsResponse._2
+      val bsSuccess = Bluesky.createRecord(bsAccessToken, bsHandle, text)
       print(text)
-

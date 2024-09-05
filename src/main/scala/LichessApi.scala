@@ -1,7 +1,6 @@
 package de.qno.tournamentadmin
 
 import sttp.client4.*
-import upickle.default.*
 
 object LichessApi:
   /**
@@ -16,7 +15,7 @@ object LichessApi:
    * @param team Only players of team allowed; defaults to TournamentEntry.teamID
    * @return ID of created tournament
    */
-  def createArena(name: String, time: String, increment: String, minutes: String, startDate: String, description: String, team: String = TournamentAdmin.teamID): ujson.Value =
+  def createArena(name: String, time: String, increment: String, minutes: String, startDate: String, description: String, team: String = TournamentAdmin.teamID): String =
     val creationMap = Map(
       "name" -> name,
       "clockTime" -> time,
@@ -33,6 +32,7 @@ object LichessApi:
       .response(asString.getRight)
       .send(DefaultSyncBackend())
       .body)("id").str
+    
 
   /**
    * Create a Lichess swiss tournament.
@@ -46,12 +46,12 @@ object LichessApi:
    * @param maxRating Maximum rating to join; defaults at empty
    * @return ID of created tournament
    */
-  def createSwiss(name: String, time: String, increment: String, nbRounds: String, startDate: String, description: String, maxRating: String = ""): ujson.Value =
+  def createSwiss(name: String, time: String, increment: String, nbRounds: String, startDate: String, description: String, maxRating: String = ""): String =
     val creationMap = Map(
       "name" -> name,
       "clock.limit" -> time,
       "clock.increment" -> increment,
-      "nbRounds" -> minutes,
+      "nbRounds" -> nbRounds,
       "startsAt" -> startDate,
       "description" -> description,
       "additionalConds" -> TournamentAdmin.teamID,
