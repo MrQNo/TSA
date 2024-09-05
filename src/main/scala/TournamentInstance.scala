@@ -4,7 +4,9 @@ import sttp.client4.*
 import org.joda.time.DateTime
 import org.joda.time.format.ISODateTimeFormat
 import upickle.default.*
-import TournamentInstance.*
+import TournamentAdmin.TournamentType
+
+import de.qno.tournamentadmin.TournamentAdmin.TournamentType.LichessSwiss
 
 import scala.annotation.tailrec
 import scala.collection.mutable.ListBuffer
@@ -41,34 +43,24 @@ case class TournamentInstance(index: Int,
       case None => throw new IllegalStateException("No corresponding series found for this instance.")
 
   /**
-   * creates the property map to transmit for creation
-   *
-   * @return the map
+   * creates an online tournament from this TournamentInstance
+   * @return ID of created tournament
    */
-  def createMap: Map[String, String] =
-    Map(
-      "name" -> s"${this.number}. ${this.series.title}",
-      s"${series.apiStrings.time}" -> series.limits(pointerTimes).toString,
-      s"${series.apiStrings.increment}" -> series.increments(pointerTimes).toString,
-      s"${series.apiStrings.duration}" -> series.duration.toString,
-      s"${series.apiStrings.startdate}" -> date.getMillis.toString,
-      s"description" -> series.description
-    ) ++ series.additionalConds
-
-  /**
-   * creates the tournament
-   *
-   * @param creationMap API-conform map of properties
-   * @return a Either[String, String] The Right string is in JSON format.
-   */
-  def createInstance(creationMap: Map[String, String]): Unit =
-    val composedUrl = s"${series.apiStrings.base}${series.apiStrings.pairingAlgorithm}${series.apiStrings.createString}"
-    basicRequest
-      .auth.bearer(TournamentEntry.token)
-      .body(creationMap)
-      .post(uri"$composedUrl")
-      .response(asString.getRight)
-      .send(DefaultSyncBackend())
+  def createOnline: String =
+    series.tournamentType match
+      case LichessArena => LichessApi.createArena(s"${this.number}. ${this.series.title}",
+        series.limits(pointerTimes).toString,
+        series.increments(pointerTimes).toString,
+        series.duration.toString,
+        date.getMillis.toString,
+        series.description)
+      case LichessSwiss => LichessApi.createSwiss(s"${this.number}. ${this.series.title}",
+        series.limits(pointerTimes).toString,
+        series.increments(pointerTimes).toString,
+        series.duration.toString,
+        date.getMillis.toString,
+        series.description,
+        "2200")
 
 object TournamentInstance:
   private val instances: Array[TournamentInstance] = init().toArray
@@ -96,7 +88,7 @@ object TournamentInstance:
     if theNextTournament.date.isAfter(DateTime.now().plusDays(30)) then
       nT
     else
-      theNextTournament.createInstance(theNextTournament.createMap)
+      theNextTournament.createOnline(theNextTournament.createMap)
       nextNext(theNextTournament)
 
   /**
@@ -113,10 +105,10 @@ object TournamentInstance:
     responses.sortBy(_.index).toList
 
   def save(): Unit =
-    os.write.over(TournamentEntry.pathToResources / "instances.json", write(instances))
+    os.write.over(TournamentAdmin.pathToResources / "instances.json", write(instances))
 
   def init(): List[TournamentInstance] =
-    read[List[TournamentInstance]](os.read(TournamentEntry.pathToResources / "instances.json"))
+    read[List[TournamentInstance]](os.read(TournamentAdmin.pathToResources / "instances.json"))
 
   @main
   def main(): Unit =
