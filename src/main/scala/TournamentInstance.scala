@@ -64,7 +64,7 @@ case class TournamentInstance(index: Int,
   def createInstance(creationMap: Map[String, String]): Unit =
     val composedUrl = s"${series.apiStrings.base}${series.apiStrings.pairingAlgorithm}${series.apiStrings.createString}"
     basicRequest
-      .auth.bearer(TournamentEntry.token)
+      .auth.bearer(TournamentAdmin.token)
       .body(creationMap)
       .post(uri"$composedUrl")
       .response(asString.getRight)
@@ -113,10 +113,10 @@ object TournamentInstance:
     responses.sortBy(_.index).toList
 
   def save(): Unit =
-    os.write.over(TournamentEntry.pathToResources / "instances.json", write(instances))
+    os.write.over(TournamentAdmin.pathToResources / "instances.json", write(instances))
 
   def init(): List[TournamentInstance] =
-    read[List[TournamentInstance]](os.read(TournamentEntry.pathToResources / "instances.json"))
+    read[List[TournamentInstance]](os.read(TournamentAdmin.pathToResources / "instances.json"))
 
   @main
   def main(): Unit =

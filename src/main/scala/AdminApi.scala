@@ -30,7 +30,7 @@ object AdminApi:
     serv = "https://lichess.org",
     base = "https://lichess.org/api",
     pairingAlgorithm = "/swiss",
-    createString = s"/new/${TournamentEntry.teamID}",
+    createString = s"/new/${TournamentAdmin.teamID}",
     time = "clock.limit",
     increment = "clock.increment",
     duration = "nbRounds",
