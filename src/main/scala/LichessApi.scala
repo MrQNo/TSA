@@ -109,7 +109,4 @@ object LichessApi:
       .response(asString.getRight)
       .send(DefaultSyncBackend())
       .body)
-    resp("ok").str match
-      case "true" => true
-      case _ => false
-
+    resp("ok").bool

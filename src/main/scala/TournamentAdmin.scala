@@ -1,8 +1,6 @@
 package de.qno.tournamentadmin
 
-import TournamentAdmin.TournamentType
 import upickle.default.*
-import sttp.client4.*
 import org.joda.time.*
 
 /**
@@ -16,9 +14,9 @@ object TournamentAdmin:
   val pathToResources: os.Path = os.pwd / "src" / "main" / "resources"
   val teamID = "deutscher-schachbund-ev-offen"
   val bsUser = "onlineschach@schachbund.de"
-  val secrets = os.read.lines(pathToResources / "token.txt")
-  val token = secrets.head
-  val bsPassword = secrets.tail.head
+  val secrets: Seq[String] = os.read.lines(pathToResources / "token.txt")
+  val token: String = secrets.head
+  val bsPassword: String = secrets.tail.head
   
   enum TournamentType derives ReadWriter:
     case LichessSwiss, LichessArena
@@ -91,14 +89,14 @@ object TournamentAdmin:
   //TODO: Twitter
   @main
   def sendMessage(): Unit =
+    TournamentInstance.create()
+
     val startText = "Heutige Turniere:\n"
     
     val text = startText ++ getLichessArenas() ++ getLichessSwiss()
 
     if text.nonEmpty then
-      LichessApi.sendMessage(text)
-      val bsResponse = Bluesky.createSession(bsUser, bsPassword)
-      val bsAccessToken = bsResponse._1
-      val bsHandle = bsResponse._2
-      val bsSuccess = Bluesky.createRecord(bsAccessToken, bsHandle, text)
+      //LichessApi.sendMessage(text)
+      val bsSession = Bluesky.createSession(bsUser, bsPassword)
+      val bsSuccess = Bluesky.createRecord(bsSession, text)
       print(text)

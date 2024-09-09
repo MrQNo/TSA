@@ -27,13 +27,13 @@ case class TournamentInstance(index: Int,
    * Calculates the next TournamentInstance after this
    * @return the next TournamentInstance
    */
-  private def nextTournament: TournamentInstance =
+  def nextTournament: TournamentInstance =
     TournamentInstance(index, number+1,
       date.plusDays(series.nextDays(pointerDays)),
       (pointerTimes + 1) % series.limits.length,
       (pointerDays + 1) % series.nextDays.length)
 
-  private def series: TournamentSeries =
+  def series: TournamentSeries =
     val corrSer = TournamentSeries.seriesList.find(this.index == _.index)
     corrSer match
       case Some(x) => x
@@ -64,14 +64,11 @@ object TournamentInstance:
 
   given Ordering[TournamentInstance] =
     Ordering.fromLessThan((first, second) => first.date.isBefore(second.date))
-
-  object RWgivens:
-    private val fmt = ISODateTimeFormat.dateTime()
-    given ReadWriter[DateTime] = readwriter[ujson.Value].bimap[DateTime](
+  
+  given dtRW: ReadWriter[DateTime] = readwriter[ujson.Value].bimap[DateTime](
       dt => dt.toString,
-      dtstr => fmt.parseDateTime(dtstr.str)
+      dtstr => ISODateTimeFormat.dateTime().parseDateTime(dtstr.str)
     )
-  import RWgivens.given
 
   /**
    * creates next tournament of given tournament, if it is less than 30 days in the future.
@@ -93,7 +90,7 @@ object TournamentInstance:
    * 
    * Side effects on TournamentInstance.instances and TournamentAdmin.nextTournaments
    */
-  def creation(): List[TournamentInstance] =
+  private def creation(): List[TournamentInstance] =
     val responses =
       for
         instance <- instances
@@ -107,8 +104,7 @@ object TournamentInstance:
   private def init(): List[TournamentInstance] =
     read[List[TournamentInstance]](os.read(TournamentAdmin.pathToResources / "instances.json"))
 
-  @main
-  def main(): Unit =
+  def create(): Unit =
     for
       instance <- creation()
     do
