@@ -112,4 +112,3 @@ object TournamentInstance:
       instances(ind) = instance
 
     save()
-    println(instances)

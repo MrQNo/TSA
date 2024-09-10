@@ -63,7 +63,9 @@ object TournamentAdmin:
      * @return true if "startsAt" equals tDate, false otherwise.
      */
     def p(x: ujson.Value): Boolean =
-      org.joda.time.DateTime.parse(x("startsAt").str).toDateTime(DateTimeZone.getDefault).equals(tDate)
+      org.joda.time.DateTime.parse(x("startsAt").str)
+        .toDateTime(DateTimeZone.getDefault) // adds TZ; necessary because server has UTC and i have not.
+        .toLocalDate.equals(tDate) // removes time, date only
     /**
      * Mapping function ujson.Value -> String
      * @param x the ujson.Value to map describing a tournament
@@ -76,7 +78,7 @@ object TournamentAdmin:
       val idt = x("id").str
       s"$time Uhr: $fullname https://lichess.org/tournaments/$idt\n"
       
-    LichessApi.getSwiss().map(ujson.read(_))
+    LichessApi.getSwiss().toList.map(ujson.read(_))
       .filter(p(_))
       .map(m(_))
       .foldLeft("")(_ + _)
@@ -96,7 +98,7 @@ object TournamentAdmin:
     val text = startText ++ getLichessArenas() ++ getLichessSwiss()
 
     if text.nonEmpty then
-      //LichessApi.sendMessage(text)
+      LichessApi.sendMessage(text)
       val bsSession = Bluesky.createSession(bsUser, bsPassword)
       val bsSuccess = Bluesky.createRecord(bsSession, text)
       print(text)
