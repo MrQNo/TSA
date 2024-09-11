@@ -3,7 +3,6 @@ package de.qno.tournamentadmin
 import org.joda.time.*
 import sttp.client4.*
 import upickle.default.*
-import upickle.default.{ReadWriter, macroRW}
 
 case class BlueskySession(accessJwt: String,
                           refreshJwt: String,

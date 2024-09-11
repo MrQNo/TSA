@@ -14,9 +14,13 @@ object TournamentAdmin:
   val pathToResources: os.Path = os.pwd / "src" / "main" / "resources"
   val teamID = "deutscher-schachbund-ev-offen"
   val bsUser = "onlineschach@schachbund.de"
-  val secrets: Seq[String] = os.read.lines(pathToResources / "token.txt")
-  val token: String = secrets.head
-  val bsPassword: String = secrets.tail.head
+  val secrets = os.read.lines(pathToResources / "token.txt").iterator
+  val lToken: String = secrets.next()
+  val bsPassword: String = secrets.next()
+  val xApiKey: String = secrets.next()
+  val xApiKeySecret: String = secrets.next()
+  val xAccesToken: String = secrets.next()
+  val xAccessTokenSecret: String = secrets.next()
   
   enum TournamentType derives ReadWriter:
     case LichessSwiss, LichessArena
