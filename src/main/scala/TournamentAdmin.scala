@@ -94,14 +94,14 @@ object TournamentAdmin:
    */
   //TODO: Twitter
   @main
-  def sendMessage(): Unit =
+  def sendMessages(): Unit =
     TournamentInstance.create()
 
     val startText = "Heutige Turniere:\n"
-    
-    val text = startText ++ getLichessArenas() ++ getLichessSwiss()
+    val newText = getLichessArenas() ++ getLichessSwiss()
+    val text = startText ++ newText
 
-    if text.nonEmpty then
+    if newText.nonEmpty then
       LichessApi.sendMessage(text)
       val bsSession = Bluesky.createSession(bsUser, bsPassword)
       val bsSuccess = Bluesky.createRecord(bsSession, text)
