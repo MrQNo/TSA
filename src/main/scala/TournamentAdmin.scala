@@ -2,6 +2,7 @@ package de.qno.tournamentadmin
 
 import upickle.default.*
 import org.joda.time.*
+import LichessApi.*
 
 /**
  * Main class of package. Provides static properties, types, and methods
@@ -15,7 +16,7 @@ object TournamentAdmin:
   val teamID = "deutscher-schachbund-ev-offen"
   val bsUser = "onlineschach@schachbund.de"
   val secrets = os.read.lines(pathToResources / "token.txt").iterator
-  val lToken: String = secrets.next()
+  private val lToken: String = secrets.next()
   val bsPassword: String = secrets.next()
   val xApiKey: String = secrets.next()
   val xApiKeySecret: String = secrets.next()
@@ -95,6 +96,7 @@ object TournamentAdmin:
   //TODO: Twitter
   @main
   def sendMessages(): Unit =
+    LichessApi.setToken(lToken)
     TournamentInstance.create()
 
     val startText = "Heutige Turniere:\n"
