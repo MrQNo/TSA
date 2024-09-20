@@ -1,5 +1,5 @@
 To use TSA for Tournaments of your own, you have to change 4 files:
-1. Create src/main/resources/token.txt. Add the following credentials, one per line:
+1. Create src/main/resources/token.txt. Add the following credentials, one per line, in that order:
   - Lichess token
   - Bluesky token
   - X Api Key, X Api Key Secret, X Access Token, X Access Token Secret
