@@ -17,7 +17,7 @@ object TournamentAdmin:
   val bsUser = "onlineschach@schachbund.de"
   val secrets = os.read.lines(pathToResources / "token.txt").iterator
   private val lToken: String = secrets.next()
-  val bsPassword: String = secrets.next()
+  private val bsPassword: String = secrets.next()
   val xApiKey: String = secrets.next()
   val xApiKeySecret: String = secrets.next()
   val xAccesToken: String = secrets.next()
