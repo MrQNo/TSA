@@ -2,13 +2,7 @@ package de.qno.tournamentadmin
 
 import sttp.client4.*
 
-object LichessApi:
-  
-  private var lichessToken: String = _
-  
-  def setToken(token: String): Unit =
-    lichessToken = token
-
+case class LichessApi(private val token: String):
   /**
    * Create a Lichess Arena.
    * All Parameters are Strings.
@@ -32,13 +26,12 @@ object LichessApi:
       "conditions.teamMember.teamId" -> team
     )
     ujson.read(basicRequest
-      .auth.bearer(lichessToken)
+      .auth.bearer(token)
       .body(creationMap)
       .post(uri"https://lichess.org/api/tournament")
       .response(asString.getRight)
       .send(DefaultSyncBackend())
       .body)("id").str
-    
 
   /**
    * Create a Lichess swiss tournament.
@@ -66,7 +59,7 @@ object LichessApi:
     )
     val composedUrl: String = s"https://lichess.org/api/swiss/new/${TournamentAdmin.teamID}"
     ujson.read(basicRequest
-      .auth.bearer(lichessToken)
+      .auth.bearer(token)
       .body(creationMap)
       .post(uri"$composedUrl")
       .response(asString.getRight)
@@ -81,7 +74,7 @@ object LichessApi:
   def getArena(team: String = TournamentAdmin.teamID): Iterator[String] =
     val composedUrl: String = s"https://lichess.org/api/team/$team/arena"
     basicRequest
-      .auth.bearer(lichessToken)
+      .auth.bearer(token)
       .get(uri"$composedUrl")
       .response(asString.getRight)
       .send(DefaultSyncBackend())
@@ -95,7 +88,7 @@ object LichessApi:
   def getSwiss(team: String = TournamentAdmin.teamID): Iterator[String] =
     val composedUrl: String = s"https://lichess.org/api/team/$team/swiss"
     basicRequest
-      .auth.bearer(lichessToken)
+      .auth.bearer(token)
       .get(uri"$composedUrl")
       .response(asString.getRight)
       .send(DefaultSyncBackend())
@@ -109,7 +102,7 @@ object LichessApi:
   def sendMessage(text: String): Boolean =
     val composedUrl = s"https://lichess.org/team/${TournamentAdmin.teamID}/pm-all"
     val resp = ujson.read(basicRequest
-      .auth.bearer(lichessToken)
+      .auth.bearer(token)
       .body(Map("message" -> text))
       .post(uri"$composedUrl")
       .response(asString.getRight)

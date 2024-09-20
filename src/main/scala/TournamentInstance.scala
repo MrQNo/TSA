@@ -43,15 +43,15 @@ case class TournamentInstance(index: Int,
    * creates an online tournament from this TournamentInstance
    * @return ID of created tournament
    */
-  def createOnline: String =
+  def createOnline(session: LichessApi): String =
     series.tournamentType match
-      case TournamentType.LichessArena => LichessApi.createArena(s"${this.number}. ${this.series.title}",
+      case TournamentType.LichessArena => session.createArena(s"${this.number}. ${this.series.title}",
         series.limits(pointerTimes).toString,
         series.increments(pointerTimes).toString,
         series.duration.toString,
         date.getMillis.toString,
         series.description)
-      case LichessSwiss => LichessApi.createSwiss(s"${this.number}. ${this.series.title}",
+      case LichessSwiss => session.createSwiss(s"${this.number}. ${this.series.title}",
         series.limits(pointerTimes).toString,
         series.increments(pointerTimes).toString,
         series.duration.toString,
@@ -77,25 +77,23 @@ object TournamentInstance:
    * @return only the newest created tournament of that series together with the series index
    */
   @tailrec
-  private def nextNext(nT: TournamentInstance): TournamentInstance =
+  private def nextNext(session: LichessApi, nT: TournamentInstance): TournamentInstance =
     val theNextTournament = nT.nextTournament
     if theNextTournament.date.isAfter(DateTime.now().plusDays(30)) then
       nT
     else
-      theNextTournament.createOnline
-      nextNext(theNextTournament)
+      theNextTournament.createOnline(session)
+      nextNext(session, theNextTournament)
 
   /**
    * directs the creation of new tournaments.
-   * 
-   * Side effects on TournamentInstance.instances and TournamentAdmin.nextTournaments
    */
-  private def creation(): List[TournamentInstance] =
+  private def creation(session: LichessApi): List[TournamentInstance] =
     val responses =
       for
         instance <- instances
       yield
-        nextNext(instance)
+        nextNext(session, instance)
     responses.sortBy(_.index).toList
 
   private def save(): Unit =
@@ -104,9 +102,9 @@ object TournamentInstance:
   private def init(): List[TournamentInstance] =
     read[List[TournamentInstance]](os.read(TournamentAdmin.pathToResources / "instances.json"))
 
-  def create(): Unit =
+  def create(session: LichessApi): Unit =
     for
-      instance <- creation()
+      instance <- creation(session)
     do
       val ind = instance.index
       instances(ind) = instance

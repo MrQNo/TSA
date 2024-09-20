@@ -15,7 +15,7 @@ object TournamentAdmin:
   val pathToResources: os.Path = os.pwd / "src" / "main" / "resources"
   val teamID = "deutscher-schachbund-ev-offen"
   val bsUser = "onlineschach@schachbund.de"
-  val secrets = os.read.lines(pathToResources / "token.txt").iterator
+  private val secrets = os.read.lines(pathToResources / "token.txt").iterator
   private val lToken: String = secrets.next()
   private val bsPassword: String = secrets.next()
   val xApiKey: String = secrets.next()
@@ -31,7 +31,7 @@ object TournamentAdmin:
    * @param tDate the day the list relates to. Defaults to today.
    * @return a String, one line per tournament, with the starting time, the name, and the link to the tournament
    */
-  private def getLichessArenas(tDate: LocalDate = LocalDate()): String =
+  private def getLichessArenas(session: LichessApi, tDate: LocalDate = LocalDate()): String =
     /**
      * Filter predicate. Tests if the "startsAt" parameter of a JSON equals tDate.
      * @param x a ujson.Value from a collection
@@ -51,7 +51,7 @@ object TournamentAdmin:
       val idt = x("id").str
       s"$time Uhr: $fullname https://lichess.org/tournaments/$idt\n"
       
-    LichessApi.getArena().map(ujson.read(_))
+    session.getArena().map(ujson.read(_))
       .filter(p(_))
       .map(m(_))
       .foldLeft("")(_ + _)
@@ -61,7 +61,7 @@ object TournamentAdmin:
    * @param tDate the day the list relates to. Defaults to today.
    * @return a String, one line per tournament, with the starting time, the name, and the link to the tournament
    */
-  private def getLichessSwiss(tDate: LocalDate = LocalDate()): String =
+  private def getLichessSwiss(session: LichessApi, tDate: LocalDate = LocalDate()): String =
     /**
      * Filter predicate. Tests if the "startsAt" parameter of a JSON equals tDate.
      * @param x a ujson.Value from a collection
@@ -83,7 +83,7 @@ object TournamentAdmin:
       val idt = x("id").str
       s"$time Uhr: $fullname https://lichess.org/tournaments/$idt\n"
       
-    LichessApi.getSwiss().toList.map(ujson.read(_))
+    session.getSwiss().toList.map(ujson.read(_))
       .filter(p(_))
       .map(m(_))
       .foldLeft("")(_ + _)
@@ -96,15 +96,15 @@ object TournamentAdmin:
   //TODO: Twitter
   @main
   def sendMessages(): Unit =
-    LichessApi.setToken(lToken)
-    TournamentInstance.create()
+    val lichessSession: LichessApi = LichessApi(lToken)
+    TournamentInstance.create(lichessSession)
 
     val startText = "Heutige Turniere:\n"
-    val newText = getLichessArenas() ++ getLichessSwiss()
+    val newText = getLichessArenas(lichessSession) ++ getLichessSwiss(lichessSession)
     val text = startText ++ newText
 
     if newText.nonEmpty then
-      LichessApi.sendMessage(text)
+      lichessSession.sendMessage(text)
       val bsSession = Bluesky.createSession(bsUser, bsPassword)
       val bsSuccess = Bluesky.createRecord(bsSession, text)
       print(text)
