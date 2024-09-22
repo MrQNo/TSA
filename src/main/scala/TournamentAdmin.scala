@@ -14,14 +14,14 @@ import LichessApi.*
 object TournamentAdmin:
   val pathToResources: os.Path = os.pwd / "src" / "main" / "resources"
   val teamID = "deutscher-schachbund-ev-offen"
-  val bsUser = "onlineschach@schachbund.de"
+  private val bsUser = "onlineschach@schachbund.de"
   private val secrets = os.read.lines(pathToResources / "token.txt").iterator
   private val lToken: String = secrets.next()
   private val bsPassword: String = secrets.next()
   val xApiKey: String = secrets.next()
-  val xApiKeySecret: String = secrets.next()
+  private val xApiKeySecret: String = secrets.next()
   val xAccesToken: String = secrets.next()
-  val xAccessTokenSecret: String = secrets.next()
+  private val xAccessTokenSecret: String = secrets.next()
   
   enum TournamentType derives ReadWriter:
     case LichessSwiss, LichessArena
@@ -52,8 +52,8 @@ object TournamentAdmin:
       s"$time Uhr: $fullname https://lichess.org/tournaments/$idt\n"
       
     session.getArena().map(ujson.read(_))
-      .filter(p(_))
-      .map(m(_))
+      .filter(p)
+      .map(m)
       .foldLeft("")(_ + _)
 
   /**
@@ -84,9 +84,12 @@ object TournamentAdmin:
       s"$time Uhr: $fullname https://lichess.org/tournaments/$idt\n"
       
     session.getSwiss().toList.map(ujson.read(_))
-      .filter(p(_))
-      .map(m(_))
+      .filter(p)
+      .map(m)
       .foldLeft("")(_ + _)
+
+  private def makeTwitterKey: String =
+    java.net.URLEncoder.encode(xApiKeySecret, java.nio.charset.Charset.defaultCharset()) + "&" + java.net.URLEncoder.encode(xAccessTokenSecret, java.nio.charset.Charset.defaultCharset())
 
   /**
    * Construct and send a message announcing todays tournaments to
@@ -106,5 +109,6 @@ object TournamentAdmin:
     if newText.nonEmpty then
       lichessSession.sendMessage(text)
       val bsSession = Bluesky.createSession(bsUser, bsPassword)
-      val bsSuccess = Bluesky.createRecord(bsSession, text)
+      Bluesky.createRecord(bsSession, text)
+      Twitter.createPost(text, makeTwitterKey)
       print(text)
