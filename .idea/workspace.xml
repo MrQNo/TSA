@@ -78,7 +78,31 @@
       <option name="project" value="LOCAL" />
       <updated>1727127977791</updated>
     </task>
-    <option name="localTasksCounter" value="2" />
+    <task id="LOCAL-00002" summary="Bugfix: Links corrected&#10;Lichess and Bluesky user name read from token.txt&#10;README.md adopted">
+      <option name="closed" value="true" />
+      <created>1727210511219</created>
+      <option name="number" value="00002" />
+      <option name="presentableId" value="LOCAL-00002" />
+      <option name="project" value="LOCAL" />
+      <updated>1727210511219</updated>
+    </task>
+    <task id="LOCAL-00003" summary="Bugfix: Links corrected&#10;Lichess and Bluesky user name read from token.txt&#10;README.md adopted">
+      <option name="closed" value="true" />
+      <created>1727210524015</created>
+      <option name="number" value="00003" />
+      <option name="presentableId" value="LOCAL-00003" />
+      <option name="project" value="LOCAL" />
+      <updated>1727210524015</updated>
+    </task>
+    <task id="LOCAL-00004" summary="Bugfix: Links corrected&#10;Lichess and Bluesky user name read from token.txt&#10;README.md adopted">
+      <option name="closed" value="true" />
+      <created>1727210579077</created>
+      <option name="number" value="00004" />
+      <option name="presentableId" value="LOCAL-00004" />
+      <option name="project" value="LOCAL" />
+      <updated>1727210579077</updated>
+    </task>
+    <option name="localTasksCounter" value="5" />
     <servers />
   </component>
   <component name="VcsManagerConfiguration">
