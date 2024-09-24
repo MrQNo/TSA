@@ -47,6 +47,7 @@
     "git-widget-placeholder": "main",
     "ignore.virus.scanning.warn.message": "true",
     "kotlin-language-version-configured": "true",
+    "last_opened_file_path": "C:/Users/qno-m/Documents/Scala/TournamentAdmin",
     "settings.editor.selected.configurable": "Errors"
   },
   "keyToStringList": {
@@ -82,6 +83,7 @@
   </component>
   <component name="VcsManagerConfiguration">
     <MESSAGE value="Bluesky prettied&#10;sbt-assembly plugin" />
-    <option name="LAST_COMMIT_MESSAGE" value="Bluesky prettied&#10;sbt-assembly plugin" />
+    <MESSAGE value="Bugfix: Links corrected&#10;Lichess and Bluesky user name read from token.txt&#10;README.md adopted" />
+    <option name="LAST_COMMIT_MESSAGE" value="Bugfix: Links corrected&#10;Lichess and Bluesky user name read from token.txt&#10;README.md adopted" />
   </component>
 </project>

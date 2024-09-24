@@ -13,10 +13,10 @@ import LichessApi.*
  */
 object TournamentAdmin:
   val pathToResources: os.Path = os.pwd / "src" / "main" / "resources"
-  val teamID = "deutscher-schachbund-ev-offen"
-  private val bsUser = "onlineschach@schachbund.de"
   private val secrets = os.read.lines(pathToResources / "token.txt").iterator
+  val teamID = secrets.next()
   private val lToken: String = secrets.next()
+  private val bsUser = secrets.next()
   private val bsPassword: String = secrets.next()
   val xApiKey: String = secrets.next()
   private val xApiKeySecret: String = secrets.next()
@@ -49,7 +49,7 @@ object TournamentAdmin:
       val time = LocalTime(date).toString("HH:mm")
       val fullname = x("fullName").str
       val idt = x("id").str
-      s"$time Uhr: $fullname https://lichess.org/tournaments/$idt\n"
+      s"$time Uhr: $fullname https://lichess.org/tournament/$idt\n"
       
     session.getArena().map(ujson.read(_))
       .filter(p)
@@ -81,7 +81,7 @@ object TournamentAdmin:
       val time = LocalTime(date).toString("HH:mm")
       val fullname = x("name").str
       val idt = x("id").str
-      s"$time Uhr: $fullname https://lichess.org/tournaments/$idt\n"
+      s"$time Uhr: $fullname https://lichess.org/swiss/$idt\n"
       
     session.getSwiss().toList.map(ujson.read(_))
       .filter(p)
@@ -96,13 +96,12 @@ object TournamentAdmin:
    * - the Lichess team
    * - the Bluesky account
    */
-  //TODO: Twitter
   @main
   def sendMessages(): Unit =
     val lichessSession: LichessApi = LichessApi(lToken)
     TournamentInstance.create(lichessSession)
 
-    val startText = "Heutige Turniere:\n"
+    val startText = "Heutige Turniere:\nBugfix: Links zu Turnieren funktionieren wieder (Dank an KilianH für den Hinweis!)\n"
     val newText = getLichessArenas(lichessSession) ++ getLichessSwiss(lichessSession)
     val text = startText ++ newText
 
