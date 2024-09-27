@@ -97,10 +97,10 @@ object TournamentInstance:
     responses.sortBy(_.index).toList
 
   private def save(): Unit =
-    os.write.over(TournamentAdmin.pathToResources / "instances.json", write(instances))
+    os.write.over(os.pwd / "instances.json", write(instances))
 
   private def init(): List[TournamentInstance] =
-    read[List[TournamentInstance]](os.read(TournamentAdmin.pathToResources / "instances.json"))
+    read[List[TournamentInstance]](os.read(os.pwd / "instances.json"))
 
   def create(session: LichessApi): Unit =
     for

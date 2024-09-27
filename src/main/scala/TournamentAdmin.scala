@@ -12,8 +12,7 @@ import LichessApi.*
  * Of course you have to edit series.json and instances.json to fit to your tournaments.
  */
 object TournamentAdmin:
-  val pathToResources: os.Path = os.pwd / "src" / "main" / "resources"
-  private val secrets = os.read.lines(pathToResources / "token.txt").iterator
+  private val secrets = os.read.lines(os.pwd / "token.txt").iterator
   val teamID: String = secrets.next()
   private val lToken: String = secrets.next()
   private val bsUser = secrets.next()

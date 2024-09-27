@@ -45,4 +45,6 @@ build/
 worksheet.sc
 
 ### Project specific ###
-src/main/resources/token.txt
+token.txt
+instances.json
+series.json

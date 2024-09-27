@@ -21,16 +21,17 @@ case class BlueskySession(accessJwt: String,
 
 object BlueskySession:
   implicit val bsSRW: ReadWriter[BlueskySession] = macroRW
-  
-case class BCRResponse(uri: String, cid: String, commit: BCRRCommit, validationStatus: Option[String])
 
-object BCRResponse:
-  implicit val bccrRW: ReadWriter[BCRResponse] = macroRW
-  
-case class BCRRCommit(cid: String, rev: String)
+// TODO: validationStatus to Option[String]
+case class BCCResponse(uri: String, cid: String, commit: BCCRCommit, validationStatus: String)
 
-object BCRRCommit:
-  implicit val bccrcRW: ReadWriter[BCRRCommit] = macroRW
+object BCCResponse:
+  implicit val bsCRR: ReadWriter[BCCResponse] = macroRW
+
+case class BCCRCommit(cid: String, rev: String)
+
+object BCCRCommit:
+  implicit val bsCRRC: ReadWriter[BCCRCommit] = macroRW
 
 case class BlueskyRecord(text: String, createdAt: String)
 
@@ -72,7 +73,7 @@ object Bluesky:
     refreshToken = jsonResponse("refreshJwt").str
     jsonResponse("accessJwt").str
 
-  def createRecord(session: BlueskySession, text: String, rkey: String = "", validate: Option[Boolean] = None): String =
+  def createRecord(session: BlueskySession, text: String, rkey: String = "", validate: Option[Boolean] = None): BCCResponse =
     val message = BlueskyRecord(text, DateTime(DateTimeZone.getDefault).toString)
     val newRecord = BlueskyCreateRecord(repo = session.handle, collection = "app.bsky.feed.post", record = message)
     val newRecordString = write(newRecord)
@@ -82,6 +83,6 @@ object Bluesky:
       .contentType("application/json")
       .body(newRecordString)
       .post(uri"https://bsky.social/xrpc/com.atproto.repo.createRecord")
-      .response(asString.getRight)
+      .response(asJson[BCCResponse].getRight)
       .send(DefaultSyncBackend())
       .body
