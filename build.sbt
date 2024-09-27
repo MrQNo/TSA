@@ -7,10 +7,8 @@ ThisBuild / scalaVersion := "3.5.1"
 lazy val root = (project in file("."))
   .settings(
     name := "TournamentAdmin",
-    idePackagePrefix := Some("de.qno.tournamentadmin"))
-  .settings(
-    assembly / mainClass := Some("de.qno.tournamentAdmin.TournamentAdmin"))
-  .settings(
+    idePackagePrefix := Some("de.qno.tournamentadmin"),
+    assembly / mainClass := Some("de.qno.tournamentAdmin.TournamentAdmin"),
     assembly / assemblyJarName := "TSA.jar"
   )
 libraryDependencies += "com.softwaremill.sttp.client4" %% "core" % "4.0.0-M14"

@@ -72,7 +72,7 @@ object Bluesky:
     refreshToken = jsonResponse("refreshJwt").str
     jsonResponse("accessJwt").str
 
-  def createRecord(session: BlueskySession, text: String, rkey: String = "", validate: Option[Boolean] = None): BCRResponse =
+  def createRecord(session: BlueskySession, text: String, rkey: String = "", validate: Option[Boolean] = None): String =
     val message = BlueskyRecord(text, DateTime(DateTimeZone.getDefault).toString)
     val newRecord = BlueskyCreateRecord(repo = session.handle, collection = "app.bsky.feed.post", record = message)
     val newRecordString = write(newRecord)
@@ -82,6 +82,6 @@ object Bluesky:
       .contentType("application/json")
       .body(newRecordString)
       .post(uri"https://bsky.social/xrpc/com.atproto.repo.createRecord")
-      .response(asJson[tournamentadmin.BCRResponse].getRight)
+      .response(asString.getRight)
       .send(DefaultSyncBackend())
       .body

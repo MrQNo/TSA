@@ -43,6 +43,7 @@
   </component>
   <component name="PropertiesComponent"><![CDATA[{
   "keyToString": {
+    "Application.sendMessages.executor": "Run",
     "RunOnceActivity.ShowReadmeOnStart": "true",
     "git-widget-placeholder": "main",
     "ignore.virus.scanning.warn.message": "true",
@@ -58,6 +59,26 @@
     ]
   }
 }]]></component>
+  <component name="RunManager">
+    <configuration name="sendMessages" type="Application" factoryName="Application" temporary="true">
+      <option name="MAIN_CLASS_NAME" value="de.qno.tournamentadmin.sendMessages" />
+      <module name="TournamentAdmin" />
+      <extension name="coverage">
+        <pattern>
+          <option name="PATTERN" value="de.qno.tournamentadmin.*" />
+          <option name="ENABLED" value="true" />
+        </pattern>
+      </extension>
+      <method v="2">
+        <option name="Make" enabled="true" />
+      </method>
+    </configuration>
+    <recent_temporary>
+      <list>
+        <item itemvalue="Application.sendMessages" />
+      </list>
+    </recent_temporary>
+  </component>
   <component name="ScalaProjectSettings">
     <option name="migrateConfigurationsNotificationShown" value="true" />
   </component>
@@ -109,5 +130,16 @@
     <MESSAGE value="Bluesky prettied&#10;sbt-assembly plugin" />
     <MESSAGE value="Bugfix: Links corrected&#10;Lichess and Bluesky user name read from token.txt&#10;README.md adopted" />
     <option name="LAST_COMMIT_MESSAGE" value="Bugfix: Links corrected&#10;Lichess and Bluesky user name read from token.txt&#10;README.md adopted" />
+  </component>
+  <component name="XDebuggerManager">
+    <breakpoint-manager>
+      <breakpoints>
+        <line-breakpoint enabled="true" type="scala-line">
+          <url>file://$PROJECT_DIR$/src/main/scala/Bluesky.scala</url>
+          <line>79</line>
+          <option name="timeStamp" value="1" />
+        </line-breakpoint>
+      </breakpoints>
+    </breakpoint-manager>
   </component>
 </project>

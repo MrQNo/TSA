@@ -14,7 +14,7 @@ import LichessApi.*
 object TournamentAdmin:
   val pathToResources: os.Path = os.pwd / "src" / "main" / "resources"
   private val secrets = os.read.lines(pathToResources / "token.txt").iterator
-  val teamID = secrets.next()
+  val teamID: String = secrets.next()
   private val lToken: String = secrets.next()
   private val bsUser = secrets.next()
   private val bsPassword: String = secrets.next()
@@ -101,7 +101,7 @@ object TournamentAdmin:
     val lichessSession: LichessApi = LichessApi(lToken)
     TournamentInstance.create(lichessSession)
 
-    val startText = "Heutige Turniere:\nBugfix: Links zu Turnieren funktionieren wieder (Dank an KilianH für den Hinweis!)\n"
+    val startText = "Heutige Turniere:\n"
     val newText = getLichessArenas(lichessSession) ++ getLichessSwiss(lichessSession)
     val text = startText ++ newText
 
