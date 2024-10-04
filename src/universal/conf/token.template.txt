@@ -1,0 +1,8 @@
+lichess-TeamID
+Lichess-Token
+Bluesky-ID
+Bluesky-Token
+x API Key
+x API Key Secret
+x Access Token
+x Access Token Secret
