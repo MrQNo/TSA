@@ -1,4 +1,5 @@
 target/
+!target/universal/de.qno.tournamentadmin.zip
 !.mvn/wrapper/maven-wrapper.jar
 !**/src/main/**/target/
 !**/src/test/**/target/

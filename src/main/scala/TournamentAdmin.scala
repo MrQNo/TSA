@@ -95,18 +95,21 @@ object TournamentAdmin:
    * - the Lichess team
    * - the Bluesky account
    */
-  @main
-  def sendMessages(): Unit =
-    val lichessSession: LichessApi = LichessApi(lToken)
+  private def sendMessages(): Unit =
+    val lichessSession: LichessApi = LichessApi(TournamentAdmin.lToken)
     TournamentInstance.create(lichessSession)
 
     val startText = "Heutige Turniere:\n"
-    val newText = getLichessArenas(lichessSession) ++ getLichessSwiss(lichessSession)
+    val newText = TournamentAdmin.getLichessArenas(lichessSession) ++ TournamentAdmin.getLichessSwiss(lichessSession)
     val text = startText ++ newText
 
     if newText.nonEmpty then
       lichessSession.sendMessage(text)
-      val bsSession = Bluesky.createSession(bsUser, bsPassword)
+      val bsSession = Bluesky.createSession(TournamentAdmin.bsUser, TournamentAdmin.bsPassword)
       Bluesky.createRecord(bsSession, text)
-      Twitter.createPost(text, makeTwitterKey)
+      Twitter.createPost(text, TournamentAdmin.makeTwitterKey)
       print(text)
+
+  @main
+  def main(): Unit =
+    sendMessages()
