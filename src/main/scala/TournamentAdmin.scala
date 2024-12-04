@@ -13,8 +13,11 @@ import LichessApi.*
  */
 object TournamentAdmin:
   private val secrets = os.read.lines(os.pwd / "token.txt").iterator
-  val teamID: String = secrets.next()
-  private val lToken: String = secrets.next()
+
+  private val lichessSecretsPath = os.pwd / "lichess.token"
+  private val lichessSecrets = os.read.lines(lichessSecretsPath).iterator
+  private val lichessSession = LichessApi(lichessSecrets.next(), lichessSecrets.next())
+
   private val bsUser = secrets.next()
   private val bsPassword: String = secrets.next()
   val xApiKey: String = secrets.next()
@@ -96,19 +99,23 @@ object TournamentAdmin:
    * - the Bluesky account
    */
   private def sendMessages(): Unit =
-    val lichessSession: LichessApi = LichessApi(TournamentAdmin.lToken)
-    TournamentInstance.create(lichessSession)
-
+    // TODO: pre and post text from file
+    // Lichess has to be defined, else no tournaments!
     val startText = "Heutige Turniere:\n"
     val newText = TournamentAdmin.getLichessArenas(lichessSession) ++ TournamentAdmin.getLichessSwiss(lichessSession)
     val text = startText ++ newText
 
     if newText.nonEmpty then
+      // Because a lichess account exists, announcements will always happen
+      TournamentInstance.create(lichessSession)
       lichessSession.sendMessage(text)
+
       val bsSession = Bluesky.createSession(TournamentAdmin.bsUser, TournamentAdmin.bsPassword)
       Bluesky.createRecord(bsSession, text)
       Twitter.createPost(text, TournamentAdmin.makeTwitterKey)
       print(text)
+    end if
+
 
   @main
   def main(): Unit =

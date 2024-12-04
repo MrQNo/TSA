@@ -49,3 +49,4 @@ worksheet.sc
 token.txt
 instances.json
 series.json
+**/*.token
