@@ -2,7 +2,7 @@ package de.qno.tournamentadmin
 
 import sttp.client4.*
 
-case class LichessApi(private val token: String):
+case class LichessApi(teamId: String, ltoken: String):
   /**
    * Create a Lichess Arena.
    * All Parameters are Strings.
@@ -12,10 +12,9 @@ case class LichessApi(private val token: String):
    * @param minutes How long tournament lasts, in minutes
    * @param startDate Start Date as Timestamp in milliseconds
    * @param description Tournament description
-   * @param team Only players of team allowed; defaults to TournamentEntry.teamID
    * @return ID of created tournament
    */
-  def createArena(name: String, time: String, increment: String, minutes: String, startDate: String, description: String, team: String = TournamentAdmin.teamID): String =
+  def createArena(name: String, time: String, increment: String, minutes: String, startDate: String, description: String): String =
     val creationMap = Map(
       "name" -> name,
       "clockTime" -> time,
@@ -23,10 +22,10 @@ case class LichessApi(private val token: String):
       "minutes" -> minutes,
       "startDate" -> startDate,
       "description" -> description,
-      "conditions.teamMember.teamId" -> team
+      "conditions.teamMember.teamId" -> teamId
     )
     ujson.read(basicRequest
-      .auth.bearer(token)
+      .auth.bearer(ltoken)
       .body(creationMap)
       .post(uri"https://lichess.org/api/tournament")
       .response(asString.getRight)
@@ -53,13 +52,13 @@ case class LichessApi(private val token: String):
       "nbRounds" -> nbRounds,
       "startsAt" -> startDate,
       "description" -> description,
-      "additionalConds" -> TournamentAdmin.teamID,
+      "additionalConds" -> teamId,
       "conditions.maxRating.rating" -> maxRating,
       "conditions.playYourGames" -> "true"
     )
-    val composedUrl: String = s"https://lichess.org/api/swiss/new/${TournamentAdmin.teamID}"
+    val composedUrl: String = s"https://lichess.org/api/swiss/new/$teamId"
     ujson.read(basicRequest
-      .auth.bearer(token)
+      .auth.bearer(ltoken)
       .body(creationMap)
       .post(uri"$composedUrl")
       .response(asString.getRight)
@@ -71,10 +70,10 @@ case class LichessApi(private val token: String):
    * @param team the ID of a team, defaults to DSB
    * @return an Iterator[String] containing one JSON tournament description per line.
    */
-  def getArena(team: String = TournamentAdmin.teamID): Iterator[String] =
-    val composedUrl: String = s"https://lichess.org/api/team/$team/arena"
+  def getArena(): Iterator[String] =
+    val composedUrl: String = s"https://lichess.org/api/team/$teamId/arena"
     basicRequest
-      .auth.bearer(token)
+      .auth.bearer(ltoken)
       .get(uri"$composedUrl")
       .response(asString.getRight)
       .send(DefaultSyncBackend())
@@ -85,10 +84,10 @@ case class LichessApi(private val token: String):
    * @param team the ID of a team, defaults to DSB
    * @return an Iterator[String] containing one JSON tournament description per line.
    */
-  def getSwiss(team: String = TournamentAdmin.teamID): Iterator[String] =
-    val composedUrl: String = s"https://lichess.org/api/team/$team/swiss"
+  def getSwiss(): Iterator[String] =
+    val composedUrl: String = s"https://lichess.org/api/team/$teamId/swiss"
     basicRequest
-      .auth.bearer(token)
+      .auth.bearer(ltoken)
       .get(uri"$composedUrl")
       .response(asString.getRight)
       .send(DefaultSyncBackend())
@@ -100,9 +99,9 @@ case class LichessApi(private val token: String):
    * @return true if success, false or Exception otherwise
    */
   def sendMessage(text: String): Boolean =
-    val composedUrl = s"https://lichess.org/team/${TournamentAdmin.teamID}/pm-all"
+    val composedUrl = s"https://lichess.org/team/$teamId/pm-all"
     val resp = ujson.read(basicRequest
-      .auth.bearer(token)
+      .auth.bearer(ltoken)
       .body(Map("message" -> text))
       .post(uri"$composedUrl")
       .response(asString.getRight)
