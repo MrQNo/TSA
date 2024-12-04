@@ -46,7 +46,6 @@ build/
 worksheet.sc
 
 ### Project specific ###
-token.txt
 instances.json
 series.json
 **/*.token

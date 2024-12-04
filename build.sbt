@@ -2,7 +2,7 @@ import sbtassembly.AssemblyPlugin.autoImport.*
 enablePlugins(UniversalPlugin)
 enablePlugins(JavaAppPackaging)
 
-ThisBuild / version := "1.1.0"
+ThisBuild / version := "1.2.0"
 ThisBuild / organization := "de.qno"
 ThisBuild / scalaVersion := "3.5.1"
 

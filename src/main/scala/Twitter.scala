@@ -10,6 +10,8 @@ import java.net.URLEncoder
 import javax.crypto.spec.SecretKeySpec
 import scala.util.Random
 
+case class TwitterCredentials(xApiKey: String, xApiKeySecret: String, xAccessToken: String, xAccessTokenSecret: String)
+
 case class XCreatePostResponse(data: XCreatePostResponse.XCreatePostResponseData)
 
 object XCreatePostResponse:
@@ -64,13 +66,13 @@ object Auth:
    * @see https://medium.com/@kevinwilliams.dev/posting-to-x-twitter-with-oauth-1-0-8d4de172cfa6
    * @see https://fusionauth.io/articles/oauth/oauth-v1-signed-requests
    */
-  def signedHeader(key: String): Header =
+  def signedHeader(cred: TwitterCredentials, key: String): Header =
     val collectAuthHeaderMap = Map(
-      "oauth_consumer_key" -> TournamentAdmin.xApiKey,
+      "oauth_consumer_key" -> cred.xApiKey,
       "oauth_signature_method" -> "HMAC-SHA1",
       "oauth_timestamp" -> (DateTime().getMillis / 1000).toString,
       "oauth_nonce" -> generateNonce,
-      "oauth_token" -> TournamentAdmin.xAccesToken,
+      "oauth_token" -> cred.xAccessToken,
       "oauth_version" -> "1.0"
     )
 
@@ -88,9 +90,9 @@ object Twitter:
 
   val createPostEndpoint = "https://api.x.com/2/tweets"
 
-  def createPost(text: String, key: String): XCreatePostResponse =
+  def createPost(cred: TwitterCredentials, text: String, key: String): XCreatePostResponse =
     val textObj = XCreatePostBody(text)
-    val h = Auth.signedHeader(key)
+    val h = Auth.signedHeader(cred, key)
     println(h)
     basicRequest
       .header(h)

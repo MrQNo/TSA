@@ -8,6 +8,8 @@ import sttp.client4.upicklejson.default.*
 
 import scala.compiletime.uninitialized
 
+case class BlueskyCredentials(bsUser: String, bsPassword: String)
+
 case class BlueskySession(accessJwt: String,
                           refreshJwt: String,
                           handle: String,

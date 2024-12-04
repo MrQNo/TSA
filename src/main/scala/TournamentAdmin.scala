@@ -1,5 +1,6 @@
 package de.qno.tournamentadmin
 
+import scala.util.*
 import upickle.default.*
 import org.joda.time.*
 import LichessApi.*
@@ -12,19 +13,20 @@ import LichessApi.*
  * Of course you have to edit series.json and instances.json to fit to your tournaments.
  */
 object TournamentAdmin:
-  private val secrets = os.read.lines(os.pwd / "token.txt").iterator
+  private val secrets = os.read.lines(os.pwd / "twitter.token").iterator
 
   private val lichessSecretsPath = os.pwd / "lichess.token"
   private val lichessSecrets = os.read.lines(lichessSecretsPath).iterator
   private val lichessSession = LichessApi(lichessSecrets.next(), lichessSecrets.next())
 
-  private val bsUser = secrets.next()
-  private val bsPassword: String = secrets.next()
-  val xApiKey: String = secrets.next()
-  private val xApiKeySecret: String = secrets.next()
-  val xAccesToken: String = secrets.next()
-  private val xAccessTokenSecret: String = secrets.next()
-  
+  private val blueskySecretsPath = os.pwd / "bluesky.token"
+  private val blueskySecrets = os.read.lines(blueskySecretsPath).iterator
+  private val blueskyCreds: Try[BlueskyCredentials] = Try(BlueskyCredentials(blueskySecrets.next(), blueskySecrets.next()))
+
+  private val twitterSecretsPath = os.pwd / "twitter.token"
+  private val twitterSecrets = os.read.lines(twitterSecretsPath).iterator
+  private val twitterCreds: Try[TwitterCredentials] = Try(TwitterCredentials(twitterSecrets.next(), twitterSecrets.next(), twitterSecrets.next(), twitterSecrets.next()))
+
   enum TournamentType derives ReadWriter:
     case LichessSwiss, LichessArena
 
@@ -90,8 +92,8 @@ object TournamentAdmin:
       .map(m)
       .foldLeft("")(_ + _)
 
-  private def makeTwitterKey: String =
-    java.net.URLEncoder.encode(xApiKeySecret, java.nio.charset.Charset.defaultCharset()) + "&" + java.net.URLEncoder.encode(xAccessTokenSecret, java.nio.charset.Charset.defaultCharset())
+  private def makeTwitterKey(cred: TwitterCredentials): String =
+    java.net.URLEncoder.encode(cred.xApiKeySecret, java.nio.charset.Charset.defaultCharset()) + "&" + java.net.URLEncoder.encode(cred.xAccessTokenSecret, java.nio.charset.Charset.defaultCharset())
 
   /**
    * Construct and send a message announcing todays tournaments to
@@ -110,9 +112,17 @@ object TournamentAdmin:
       TournamentInstance.create(lichessSession)
       lichessSession.sendMessage(text)
 
-      val bsSession = Bluesky.createSession(TournamentAdmin.bsUser, TournamentAdmin.bsPassword)
-      Bluesky.createRecord(bsSession, text)
-      Twitter.createPost(text, TournamentAdmin.makeTwitterKey)
+      blueskyCreds match
+        case Success(cred) =>
+          val bsSession = Bluesky.createSession(cred.bsUser, cred.bsPassword)
+          Bluesky.createRecord(bsSession, text)
+        case _ => {}
+
+      twitterCreds match
+        case Success(cred) =>
+          Twitter.createPost(cred, text, makeTwitterKey(cred))
+        case _ => {}
+
       print(text)
     end if
 
