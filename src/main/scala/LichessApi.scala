@@ -1,6 +1,83 @@
 package de.qno.tournamentadmin
 
 import sttp.client4.*
+import sttp.client4.upicklejson.default.*
+import upickle.default.*
+
+enum LichesSystem(system: String) derives ReadWriter:
+  case ARENA extends LichesSystem("arena")
+
+enum LichessStatus(status: Integer) derives ReadWriter:
+  case CREATED extends LichessStatus(10)
+  case STARTED extends LichessStatus(20)
+  case FINISHED extends LichessStatus(30)
+
+enum LichessVariantKey(variant: String) derives ReadWriter:
+  case STANDARD extends LichessVariantKey("standard")
+  case CHESS960 extends LichessVariantKey("chess960")
+  case CRAZYHOUSE extends LichessVariantKey("crazyhouse")
+  case ANTICHESS extends LichessVariantKey("antichess")
+  case ATOMIC extends LichessVariantKey("atomic")
+  case HORDE extends LichessVariantKey("horde")
+  case KINGOFTHEHILL extends LichessVariantKey("kingOfTheHill")
+  case RACINGKINGS extends LichessVariantKey("racingKings")
+  case THREECHECK extends LichessVariantKey("threeCheck")
+  case FROMPOSITION extends LichessVariantKey("fromPosition")
+
+enum LichessPerfType(perf: String) derives ReadWriter:
+  case ULTRABULLET extends LichessPerfType("ultraBullet")
+  case BULLET extends LichessPerfType("bullet")
+  case BLITZ extends LichessPerfType("blitz")
+  case RAPID extends LichessPerfType("rapid")
+  case CLASSICAL extends LichessPerfType("classical")
+  case CORRESPONDENCE extends LichessPerfType("correspondence")
+  case CHESS960 extends LichessPerfType("chess960")
+  case CRAZYHOUSE extends LichessPerfType("crazyhouse")
+  case ANTICHESS extends LichessPerfType("antichess")
+  case ATOMIC extends LichessPerfType("atomic")
+  case HORDE extends LichessPerfType("horde")
+  case KINGOFTHEHILL extends LichessPerfType("kingOfTheHill")
+  case RACINGKINGS extends LichessPerfType("racingKings")
+  case THREECHECK extends LichessPerfType("threeCheck")
+
+case class LichessClock(limit: Integer, increment: Integer) derives ReadWriter
+
+case class LichessVariant(key: LichessVariantKey, name: String, short: String)
+object LichessVariant:
+  implicit val lat: ReadWriter[LichessVariant] = macroRW
+
+case class LichessArenaPerf(key: String, name: String, position: String, icon: String) derives ReadWriter
+
+case class LichessArenaRatingObj(perf: LichessPerfType, rating: Integer)
+object LichessArenaRatingObj:
+  implicit val laro: ReadWriter[LichessArenaRatingObj] = macroRW
+
+case class LichessMinRated(nb: Integer) derives ReadWriter
+
+sealed trait LichessArenaPosition derives ReadWriter
+case class LichessThematic(eco: String, name: String, fen: String, url: String) extends LichessArenaPosition
+case class LichessCustomPosition(name: String, fen: String) extends LichessArenaPosition
+
+case class LichessSchedule(freq: String, speed: String) derives ReadWriter
+
+case class LichessTeamBattle(teams: Array[String], nbLeaders: Integer)
+object LichessTeamBattle:
+  implicit val ltb: ReadWriter[LichessTeamBattle] = macroRW
+
+case class LichessWinner(id: String, name: String = "") derives ReadWriter
+
+case class LichessArenaTournamentList(id: String, createdBy: String, system: LichesSystem, minutes: Integer, clock: LichessClock, rated: Boolean, fullName: String,
+                                      nbPlayers: Integer, variant: LichessVariant, startsAt: Integer, finishesAt: Integer, status: LichessStatus, secondsToStart: Integer,
+                                      hasMaxRating: Boolean, maxRating: LichessArenaRatingObj, minRating: LichessArenaRatingObj, minRatedGames: LichessMinRated, onlyTitled: Boolean, teamMember: String,
+                                      privat: Boolean, position: LichessArenaPosition, schedule: LichessSchedule, teamBattle: LichessTeamBattle, winner: LichessWinner)
+object LichessArenaTournamentList:
+  implicit val latl: ReadWriter[LichessArenaTournamentList] = macroRW
+
+case class LichessArenaTournament(created: LichessArenaTournamentList,
+                                  started: LichessArenaTournamentList,
+                                  finished: LichessArenaTournamentList)
+object LichessArenaTournament:
+  implicit val lat: ReadWriter[LichessArenaTournament] = macroRW
 
 case class LichessApi(teamId: String, ltoken: String):
   /**
@@ -70,14 +147,14 @@ case class LichessApi(teamId: String, ltoken: String):
    * @param team the ID of a team, defaults to DSB
    * @return an Iterator[String] containing one JSON tournament description per line.
    */
-  def getArena(): Iterator[String] =
+  def getArena(): LichessArenaTournament =
     val composedUrl: String = s"https://lichess.org/api/team/$teamId/arena"
     basicRequest
       .auth.bearer(ltoken)
       .get(uri"$composedUrl")
-      .response(asString.getRight)
+      .response(asJson[LichessArenaTournament].getRight)
       .send(DefaultSyncBackend())
-      .body.linesIterator
+      .body
 
   /**
    * Get an Iterator over a nlJSON list of Lichess Swiss tournaments of a team 

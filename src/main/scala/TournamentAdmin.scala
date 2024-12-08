@@ -35,7 +35,7 @@ object TournamentAdmin:
    * @param tDate the day the list relates to. Defaults to today.
    * @return a String, one line per tournament, with the starting time, the name, and the link to the tournament
    */
-  private def getLichessArenas(session: LichessApi, tDate: LocalDate = LocalDate()): String =
+  private def getLichessArenas(session: LichessApi, tDate: LocalDate = LocalDate()): List[String] =
     /**
      * Filter predicate. Tests if the "startsAt" parameter of a JSON equals tDate.
      * @param x a ujson.Value from a collection
@@ -55,17 +55,16 @@ object TournamentAdmin:
       val idt = x("id").str
       s"$time Uhr: $fullname https://lichess.org/tournament/$idt\n"
       
-    session.getArena().map(ujson.read(_))
+    session.getArena().toList.map(ujson.read(_))
       .filter(p)
       .map(m)
-      .foldLeft("")(_ + _)
 
   /**
    * Gets a list of team's Lichess Swiss tournaments on a day.
    * @param tDate the day the list relates to. Defaults to today.
    * @return a String, one line per tournament, with the starting time, the name, and the link to the tournament
    */
-  private def getLichessSwiss(session: LichessApi, tDate: LocalDate = LocalDate()): String =
+  private def getLichessSwiss(session: LichessApi, tDate: LocalDate = LocalDate()): List[String] =
     /**
      * Filter predicate. Tests if the "startsAt" parameter of a JSON equals tDate.
      * @param x a ujson.Value from a collection
@@ -90,7 +89,6 @@ object TournamentAdmin:
     session.getSwiss().toList.map(ujson.read(_))
       .filter(p)
       .map(m)
-      .foldLeft("")(_ + _)
 
   private def makeTwitterKey(cred: TwitterCredentials): String =
     java.net.URLEncoder.encode(cred.xApiKeySecret, java.nio.charset.Charset.defaultCharset()) + "&" + java.net.URLEncoder.encode(cred.xAccessTokenSecret, java.nio.charset.Charset.defaultCharset())
@@ -103,27 +101,27 @@ object TournamentAdmin:
   private def sendMessages(): Unit =
     // TODO: pre and post text from file
     // Lichess has to be defined, else no tournaments!
-    val startText = "Heutige Turniere:\n"
-    val newText = TournamentAdmin.getLichessArenas(lichessSession) ++ TournamentAdmin.getLichessSwiss(lichessSession)
-    val text = startText ++ newText
-
-    if newText.nonEmpty then
+    val preAnnouncementText = "Heutige Turniere:"
+    val tournamenAnnouncementText = (TournamentAdmin.getLichessArenas(lichessSession) ::: TournamentAdmin.getLichessSwiss(lichessSession)).sorted.foldLeft(preAnnouncementText)(_ + "\n" + _)
+    val preResultText = "Ergebnisse von gestern:"
+    
+    if tournamenAnnouncementText.nonEmpty then
       // Because a lichess account exists, announcements will always happen
       TournamentInstance.create(lichessSession)
-      lichessSession.sendMessage(text)
+      lichessSession.sendMessage(tournamenAnnouncementText)
 
       blueskyCreds match
         case Success(cred) =>
           val bsSession = Bluesky.createSession(cred.bsUser, cred.bsPassword)
-          Bluesky.createRecord(bsSession, text)
+          Bluesky.createRecord(bsSession, tournamenAnnouncementText)
         case _ => {}
 
       twitterCreds match
         case Success(cred) =>
-          Twitter.createPost(cred, text, makeTwitterKey(cred))
+          Twitter.createPost(cred, tournamenAnnouncementText, makeTwitterKey(cred))
         case _ => {}
 
-      print(text)
+      print(tournamenAnnouncementText)
     end if
 
   @main
