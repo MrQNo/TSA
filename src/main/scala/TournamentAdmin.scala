@@ -33,38 +33,40 @@ object TournamentAdmin:
   /**
    * Gets a list of team's Lichess Arenas on a day.
    * @param tDate the day the list relates to. Defaults to today.
-   * @return a String, one line per tournament, with the starting time, the name, and the link to the tournament
+   * @return a List of String, one per tournament, with the starting time, the name, and the link to the tournament
    */
-  private def getLichessArenas(session: LichessApi, tDate: LocalDate = LocalDate()): List[String] =
+  private def getLichessArenas(session: LichessApi, tDate: LocalDate = LocalDate()): List[LichessArenaTournamentListEntry] =
     /**
-     * Filter predicate. Tests if the "startsAt" parameter of a JSON equals tDate.
-     * @param x a ujson.Value from a collection
+     * Filter predicate. Tests if the "startsAt" parameter of a LichessArenaTournamentList equals tDate.
+     * @param x a LichessArenaTournamentList from a collection
      * @return true if "startsAt" equals tDate, false otherwise.
      */
-    def p(x: ujson.Value): Boolean =
-      LocalDate( DateTime( x("startsAt").num.toLong )).equals(tDate)
+    def p(x: LichessArenaTournamentListEntry): Boolean =
+      LocalDate( DateTime( x.startsAt.toLong )).equals(tDate)
+
+    session.getArena().created.toList.filter(p)
+
+  private def getLichessArenasDates(tlist: List[LichessArenaTournamentListEntry]): List[String] =
     /**
-     * Mapping function ujson.Value -> String
-     * @param x the ujson.Value to map describing a tournament
+     * Mapping function LichessArenaTournamentList -> String
+     * @param x the LichessArenaTournamentList to map describing a tournament
      * @return a String containing starting time, name, and link to tournament
      */
-    def m(x: ujson.Value): String =
-      val date = DateTime(x("startsAt").num.toLong)
+    def m(x: LichessArenaTournamentListEntry): String =
+      val date = DateTime(x.startsAt.toLong)
       val time = LocalTime(date).toString("HH:mm")
-      val fullname = x("fullName").str
-      val idt = x("id").str
+      val fullname = x.fullName
+      val idt = x.id
       s"$time Uhr: $fullname https://lichess.org/tournament/$idt\n"
-      
-    session.getArena().toList.map(ujson.read(_))
-      .filter(p)
-      .map(m)
+
+    tlist.map(m)
 
   /**
    * Gets a list of team's Lichess Swiss tournaments on a day.
    * @param tDate the day the list relates to. Defaults to today.
    * @return a String, one line per tournament, with the starting time, the name, and the link to the tournament
    */
-  private def getLichessSwiss(session: LichessApi, tDate: LocalDate = LocalDate()): List[String] =
+  private def getLichessSwiss(session: LichessApi, tDate: LocalDate = LocalDate()): List[de.qno.tournamentadmin.LichessSwissTournamentListEntry] =
     /**
      * Filter predicate. Tests if the "startsAt" parameter of a JSON equals tDate.
      * @param x a ujson.Value from a collection
@@ -102,7 +104,9 @@ object TournamentAdmin:
     // TODO: pre and post text from file
     // Lichess has to be defined, else no tournaments!
     val preAnnouncementText = "Heutige Turniere:"
-    val tournamenAnnouncementText = (TournamentAdmin.getLichessArenas(lichessSession) ::: TournamentAdmin.getLichessSwiss(lichessSession)).sorted.foldLeft(preAnnouncementText)(_ + "\n" + _)
+    val tournamenAnnouncementText = (getLichessArenasDates(getLichessArenas(lichessSession))
+      ::: TournamentAdmin.getLichessSwiss(lichessSession))
+      .sorted.foldLeft(preAnnouncementText)(_ + "\n" + _)
     val preResultText = "Ergebnisse von gestern:"
     
     if tournamenAnnouncementText.nonEmpty then

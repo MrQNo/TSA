@@ -1,5 +1,6 @@
 package de.qno.tournamentadmin
 
+import de.qno.tournamentadmin
 import sttp.client4.*
 import sttp.client4.upicklejson.default.*
 import upickle.default.*
@@ -66,18 +67,36 @@ object LichessTeamBattle:
 
 case class LichessWinner(id: String, name: String = "") derives ReadWriter
 
-case class LichessArenaTournamentList(id: String, createdBy: String, system: LichesSystem, minutes: Integer, clock: LichessClock, rated: Boolean, fullName: String,
-                                      nbPlayers: Integer, variant: LichessVariant, startsAt: Integer, finishesAt: Integer, status: LichessStatus, secondsToStart: Integer,
-                                      hasMaxRating: Boolean, maxRating: LichessArenaRatingObj, minRating: LichessArenaRatingObj, minRatedGames: LichessMinRated, onlyTitled: Boolean, teamMember: String,
-                                      privat: Boolean, position: LichessArenaPosition, schedule: LichessSchedule, teamBattle: LichessTeamBattle, winner: LichessWinner)
-object LichessArenaTournamentList:
-  implicit val latl: ReadWriter[LichessArenaTournamentList] = macroRW
+case class LichessArenaTournamentListEntry(id: String, createdBy: String, system: LichesSystem, minutes: Integer, clock: LichessClock, rated: Boolean, fullName: String,
+                                           nbPlayers: Integer, variant: LichessVariant, startsAt: Integer, finishesAt: Integer, status: LichessStatus, secondsToStart: Integer,
+                                           hasMaxRating: Boolean, maxRating: LichessArenaRatingObj, minRating: LichessArenaRatingObj, minRatedGames: LichessMinRated, onlyTitled: Boolean, teamMember: String,
+                                           privat: Boolean, position: LichessArenaPosition, schedule: LichessSchedule, teamBattle: LichessTeamBattle, winner: LichessWinner)
+object LichessArenaTournamentListEntry:
+  implicit val latl: ReadWriter[LichessArenaTournamentListEntry] = macroRW
 
-case class LichessArenaTournament(created: LichessArenaTournamentList,
-                                  started: LichessArenaTournamentList,
-                                  finished: LichessArenaTournamentList)
+case class LichessArenaTournament(created: Array[LichessArenaTournamentListEntry],
+                                  started: Array[LichessArenaTournamentListEntry],
+                                  finished: Array[LichessArenaTournamentListEntry])
 object LichessArenaTournament:
   implicit val lat: ReadWriter[LichessArenaTournament] = macroRW
+
+case class LichessStats(games: Integer, whiteWins: Integer, blackWins: Integer, draws: Integer, byes: Integer, absences: Integer, averageRating: Integer)
+object LichessStats:
+  implicit val lst: ReadWriter[LichessStats] = macroRW
+
+case class LichessVerdictObject(condition: String, verdict: String)
+object LichessVerdictObject:
+  implicit val lvo: ReadWriter[LichessVerdictObject] = macroRW
+
+case class LichessVerdicts(accepted: Boolean, list: Array[LichessVerdictObject])
+object LichessVerdicts:
+  implicit val lvd: ReadWriter[LichessVerdicts] = macroRW
+
+case class LichessSwissTournamentListEntry(id: String, createdBy: String, startsAt: Integer, name: String, clock: LichessClock, variant: LichessVariant,
+                                           round: Integer, nbRounds: Integer, nbPlayers: Integer, nbOngoing: Integer, status: LichessStatus, stats: LichessStats, rated: Boolean,
+                                           verdicts: LichessVerdicts)
+object LichessSwissTournamentListEntry:
+  implicit val lstl: ReadWriter[LichessSwissTournamentListEntry] = macroRW
 
 case class LichessApi(teamId: String, ltoken: String):
   /**
@@ -161,14 +180,14 @@ case class LichessApi(teamId: String, ltoken: String):
    * @param team the ID of a team, defaults to DSB
    * @return an Iterator[String] containing one JSON tournament description per line.
    */
-  def getSwiss(): Iterator[String] =
+  def getSwiss(): List[tournamentadmin.LichessSwissTournamentListEntry] =
     val composedUrl: String = s"https://lichess.org/api/team/$teamId/swiss"
     basicRequest
       .auth.bearer(ltoken)
       .get(uri"$composedUrl")
-      .response(asString.getRight)
+      .response(asJson[List[tournamentadmin.LichessSwissTournamentListEntry]].getRight)
       .send(DefaultSyncBackend())
-      .body.linesIterator
+      .body
 
   /**
    * Send a message to all members of my team.

@@ -1,6 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="ScalaSbtSettings">
+    <option name="customLauncherPath" />
+    <option name="customVMPath" />
     <option name="linkedExternalProjectsSettings">
       <SbtProjectSettings>
         <option name="converterVersion" value="2" />
@@ -13,6 +15,8 @@
         </option>
         <option name="resolveSbtClassifiers" value="true" />
         <option name="sbtVersion" value="1.10.0" />
+        <option name="useSbtShellForBuild" value="true" />
+        <option name="useSbtShellForImport" value="true" />
       </SbtProjectSettings>
     </option>
   </component>
