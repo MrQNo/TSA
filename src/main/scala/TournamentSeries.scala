@@ -1,17 +1,15 @@
 package de.qno.tournamentadmin
 
-import TournamentAdmin.TournamentType
+import lichess.LichessInternalDataTypes.LichesSystem
 
 import upickle.default.*
 
 /** describes a tournament series
  * 
- * class is stateless, immutable, and threadsafe
- * 
- * Two instances for own use added. Deprecated; will be replaced by JSON import.
+ * class is immutable, and threadsafe
  */
 case class TournamentSeries (index: Int,
-                             tournamentType: TournamentType,
+                             tournamentType: LichesSystem,
                              title: String,
                              duration: Int,
                              description: String,

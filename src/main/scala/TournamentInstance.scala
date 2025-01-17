@@ -1,10 +1,12 @@
 package de.qno.tournamentadmin
 
+import TournamentSeries.*
+import lichess.LichessApi
+import lichess.LichessInternalDataTypes.LichesSystem.{ARENA, SWISS}
+
 import org.joda.time.DateTime
 import org.joda.time.format.ISODateTimeFormat
 import upickle.default.*
-import TournamentAdmin.TournamentType
-import TournamentAdmin.TournamentType.*
 
 import scala.annotation.tailrec
 
@@ -45,13 +47,13 @@ case class TournamentInstance(index: Int,
    */
   def createOnline(session: LichessApi): String =
     series.tournamentType match
-      case TournamentType.LichessArena => session.createArena(s"${this.number}. ${this.series.title}",
+      case ARENA => session.createArena(s"${this.number}. ${this.series.title}",
         series.limits(pointerTimes).toString,
         series.increments(pointerTimes).toString,
         series.duration.toString,
         date.getMillis.toString,
         series.description)
-      case LichessSwiss => session.createSwiss(s"${this.number}. ${this.series.title}",
+      case SWISS => session.createSwiss(s"${this.number}. ${this.series.title}",
         series.limits(pointerTimes).toString,
         series.increments(pointerTimes).toString,
         series.duration.toString,
