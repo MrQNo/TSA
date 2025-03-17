@@ -17,7 +17,7 @@ object TournamentAdmin:
 
   private val lichessSecretsPath = os.pwd / "lichess.token"
   private val lichessSecrets = os.read.lines(lichessSecretsPath).iterator
-  private val lichessSession = LichessApi(lichessSecrets.next(), lichessSecrets.next())
+  val lichessSession = LichessApi(lichessSecrets.next(), lichessSecrets.next())
 
   private val blueskySecretsPath = os.pwd / "bluesky.token"
   private val blueskySecrets = os.read.lines(blueskySecretsPath).iterator
