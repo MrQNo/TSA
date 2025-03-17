@@ -97,14 +97,15 @@ case class LichessApi(teamId: String, ltoken: String):
    * @param team the ID of a team, defaults to DSB
    * @return an Iterator[String] containing one JSON tournament description per line.
    */
-  def getArena(): LichessArenaTournament =
+  def getArena: List[LichessArenaTournamentListEntry] =
     val composedUrl: String = s"https://lichess.org/api/team/$teamId/arena"
     basicRequest
       .auth.bearer(ltoken)
       .get(uri"$composedUrl")
-      .response(asJson[LichessArenaTournament].getRight)
+      .response(asString.getRight)
       .send(DefaultSyncBackend())
-      .body
+      .body.linesIterator
+      .map(read[LichessArenaTournamentListEntry](_)).toList
 
   /**
    * Gets a list of team's Lichess Arenas on a day.
@@ -112,9 +113,7 @@ case class LichessApi(teamId: String, ltoken: String):
    * @return a List of String, one per tournament, with the starting time, the name, and the link to the tournament
    */
   def getLichessArenas(tDate: LocalDate): List[LichessArenaTournamentListEntry] =
-    tDate match
-      case x if x == LocalDate() => getArena().created.toList.filter(p(tDate))
-      case x if x == LocalDate().minusDays(1) => getArena().finished.toList.filter(p(tDate))
+    getArena.filter(p(tDate))
 
   def getLichessArenasDates(tlist: List[LichessArenaTournamentListEntry]): List[String] =
     tlist.map(m)
@@ -123,14 +122,15 @@ case class LichessApi(teamId: String, ltoken: String):
    * Get an Iterator over a nlJSON list of Lichess Swiss tournaments of a team 
    * @return an Iterator[String] containing one JSON tournament description per line.
    */
-  def getSwiss(): List[LichessSwissTournamentListEntry] =
+  def getSwiss: List[LichessSwissTournamentListEntry] =
     val composedUrl: String = s"https://lichess.org/api/team/$teamId/swiss"
     basicRequest
       .auth.bearer(ltoken)
       .get(uri"$composedUrl")
-      .response(asJson[List[LichessSwissTournamentListEntry]].getRight)
+      .response(asString.getRight)
       .send(DefaultSyncBackend())
-      .body
+      .body.linesIterator
+      .map(read[LichessSwissTournamentListEntry](_)).toList
 
   /**
    * Gets a list of team's Lichess Swiss tournaments on a day.
@@ -138,13 +138,13 @@ case class LichessApi(teamId: String, ltoken: String):
    * @return a String, one line per tournament, with the starting time, the name, and the link to the tournament
    */
   private def getLichessSwiss(tDate: LocalDate): List[LichessSwissTournamentListEntry] =
-    getSwiss().filter(p(tDate))
+    getSwiss.filter(p(tDate))
 
   def getLichessSwissDates(tlist: List[LichessSwissTournamentListEntry]): List[String] =
     tlist.map(m)
     
   def getTournamentAnnouncementDates(tDate: LocalDate = LocalDate()): List[String] =
-    (getLichessArenasDates(getLichessArenas(tDate))).sorted  
+    (getLichessArenasDates(getLichessArenas(tDate)) ::: getLichessSwissDates(getLichessSwiss(tDate))).sorted  
 
   /**
    * Send a message to all members of my team.

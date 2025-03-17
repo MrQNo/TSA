@@ -43,7 +43,7 @@ object LichessInternalDataTypes:
     case THREECHECK extends LichessVariantKey("threeCheck")
     case FROMPOSITION extends LichessVariantKey("fromPosition")
 
-  case class LichessArenaPerf(key: String, name: String, position: String, icon: String)derives ReadWriter
+  case class LichessArenaPerf(key: String, name: String, position: Integer, icon: String)derives ReadWriter
 
   sealed trait LichessArenaPosition derives ReadWriter
   case class LichessThematic(eco: String, name: String, fen: String, url: String) extends LichessArenaPosition
@@ -53,16 +53,13 @@ object LichessInternalDataTypes:
   object LichessArenaRatingObj:
     implicit val laro: ReadWriter[LichessArenaRatingObj] = macroRW
 
-  case class LichessArenaTournament(created: Array[LichessArenaTournamentListEntry],
-                                    started: Array[LichessArenaTournamentListEntry],
-                                    finished: Array[LichessArenaTournamentListEntry])
-  object LichessArenaTournament:
-    implicit val lat: ReadWriter[LichessArenaTournament] = macroRW
-
-  case class LichessArenaTournamentListEntry(id: String, createdBy: String, system: LichesSystem, minutes: Integer, clock: LichessClock, rated: Boolean, fullName: String,
-                                             nbPlayers: Integer, variant: LichessVariant, startsAt: Integer, finishesAt: Integer, status: LichessStatus, secondsToStart: Integer,
-                                             hasMaxRating: Boolean, maxRating: LichessArenaRatingObj, minRating: LichessArenaRatingObj, minRatedGames: LichessMinRated, onlyTitled: Boolean, teamMember: String,
-                                             privat: Boolean, position: LichessArenaPosition, schedule: LichessSchedule, teamBattle: LichessTeamBattle, winner: LichessWinner) extends LichessTournamentListEntry:
+  case class LichessArenaTournamentListEntry(id: String, createdBy: String, system: String, minutes: Integer, clock: LichessClock, rated: Boolean, fullName: String,
+                                             nbPlayers: Integer, variant: LichessVariant, startsAt: Integer, finishesAt: Integer, status: Integer, perf: LichessArenaPerf, secondsToStart: Integer = 0,
+                                             hasMaxRating: Boolean = false, maxRating: LichessArenaRatingObj = LichessArenaRatingObj(LichessPerfType.BLITZ, 0),
+                                             minRating: LichessArenaRatingObj = LichessArenaRatingObj(LichessPerfType.BLITZ, 0), 
+                                             minRatedGames: LichessMinRatedGames = LichessMinRatedGames(0), onlyTitled: Boolean = false, teamMember: String = "",
+                                             @upickle.implicits.key("private") privat: Boolean = false, position: LichessArenaPosition = LichessCustomPosition("", ""), 
+                                             schedule: LichessSchedule = LichessSchedule("", ""), teamBattle: LichessTeamBattle = LichessTeamBattle(Array(""), 0), winner: LichessWinner = LichessWinner("", "")) extends LichessTournamentListEntry:
     def getStartTime: DateTime =
       DateTime(startsAt.toLong)
     def getName: String = fullName
@@ -72,17 +69,17 @@ object LichessInternalDataTypes:
   
   case class LichessClock(limit: Integer, increment: Integer) derives ReadWriter
 
-  case class LichessMinRated(nb: Integer)derives ReadWriter
-
+  case class LichessMinRatedGames(nb: Integer = 0) derives ReadWriter
+  
   case class LichessSchedule(freq: String, speed: String) derives ReadWriter
 
   case class LichessStats(games: Integer, whiteWins: Integer, blackWins: Integer, draws: Integer, byes: Integer, absences: Integer, averageRating: Integer)
   object LichessStats:
     implicit val lst: ReadWriter[LichessStats] = macroRW
 
-  case class LichessSwissTournamentListEntry(id: String, createdBy: String, startsAt: String, name: String, clock: LichessClock, variant: LichessVariant,
-                                             round: Integer, nbRounds: Integer, nbPlayers: Integer, nbOngoing: Integer, status: LichessStatus, stats: LichessStats, rated: Boolean,
-                                             verdicts: LichessVerdicts) extends LichessTournamentListEntry:
+  case class LichessSwissTournamentListEntry(id: String, createdBy: String, startsAt: String, name: String, clock: LichessClock, variant: String,
+                                             round: Integer, nbRounds: Integer, nbPlayers: Integer, nbOngoing: Integer, status: String, stats: LichessStats = LichessStats(0,0,0,0,0,0,0), 
+                                             rated: Boolean, verdicts: LichessVerdicts) extends LichessTournamentListEntry:
     def getStartTime: DateTime =
       val formatter: DateTimeFormatter = DateTimeFormat.forPattern("yyyy-MM-dd'T'HH:mm:ssZ")
       formatter.parseDateTime(startsAt)
@@ -100,7 +97,7 @@ object LichessInternalDataTypes:
     def getName: String
     def getId: String
   
-  case class LichessVariant(key: LichessVariantKey, name: String, short: String)
+  case class LichessVariant(key: String, name: String, short: String)
   object LichessVariant:
     implicit val lat: ReadWriter[LichessVariant] = macroRW
 
