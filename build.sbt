@@ -2,9 +2,9 @@ import sbtassembly.AssemblyPlugin.autoImport.*
 enablePlugins(UniversalPlugin)
 enablePlugins(JavaAppPackaging)
 
-ThisBuild / version := "1.2.5"
+ThisBuild / version := "2.0.0-alpha"
 ThisBuild / organization := "de.qno"
-ThisBuild / scalaVersion := "3.6.3"
+ThisBuild / scalaVersion := "3.6.4"
 
 lazy val root = (project in file("."))
   .settings(

@@ -1,12 +1,13 @@
 package de.qno.tournamentadmin
 
-import de.qno.tournamentadmin
+import scala.compiletime.uninitialized
+
 import org.joda.time.*
 import sttp.client4.*
-import upickle.default.*
 import sttp.client4.upicklejson.default.*
+import upickle.default.*
 
-import scala.compiletime.uninitialized
+import de.qno.tournamentadmin
 
 case class BlueskyCredentials(bsUser: String, bsPassword: String)
 
@@ -19,32 +20,52 @@ case class BlueskySession(accessJwt: String,
                           emailConfirmed: Boolean = false,
                           emailAuthFactor: Boolean = false,
                           active: Boolean = true,
-                          status: String = "")
+                          status: String = "") derives ReadWriter:
 
-object BlueskySession:
-  implicit val bsSRW: ReadWriter[BlueskySession] = macroRW
+  def createRecord(text: String, rkey: String = "", validate: Boolean = false): Response =
+    val message = Record(text, DateTime(DateTimeZone.getDefault).toString)
+    val newRecord = CreateRecord(repo = handle, collection = "app.bsky.feed.post", record = message)
+  
+    basicRequest
+      .auth.bearer(accessJwt)
+      .contentType("application/json")
+      .body(write(newRecord))
+      .post(uri"https://bsky.social/xrpc/com.atproto.repo.createRecord")
+      .response(asJson[Response].getRight)
+      .send(DefaultSyncBackend())
+      .body
+    
+  def createReply(text: String, rkey: String = "", validate: Boolean = false, rootPost: Response, parentPost: Response): Response =
+    val root = PostReference(rootPost.uri, rootPost.cid)
+    val parent = PostReference(parentPost.uri, parentPost.cid)
+    val replyObject = ReplyObject(root, parent)
+    val replyRecord = ReplyRecord(text, DateTime(DateTimeZone.getDefault).toString, replyObject)
+    val newRecord = CreateReplyRecord(repo = handle, collection = "app.bsky.feed.post", record = replyRecord)
 
-// TODO: validationStatus to Option[String]
-case class BCCResponse(uri: String, cid: String, commit: BCCRCommit, validationStatus: String)
+    basicRequest
+      .auth.bearer(accessJwt)
+      .contentType("application/json")
+      .body(write[CreateReplyRecord](newRecord))
+      .post(uri"https://bsky.social/xrpc/com.atproto.repo.createRecord")
+      .response(asJson[Response].getRight)
+      .send(DefaultSyncBackend())
+      .body
+    
+case class Response(uri: String, cid: String, commit: Commit, validationStatus: String = "") derives ReadWriter
 
-object BCCResponse:
-  implicit val bsCRR: ReadWriter[BCCResponse] = macroRW
+case class Commit(cid: String, rev: String) derives ReadWriter
 
-case class BCCRCommit(cid: String, rev: String)
+case class Record(text: String, createdAt: String) derives ReadWriter
 
-object BCCRCommit:
-  implicit val bsCRRC: ReadWriter[BCCRCommit] = macroRW
+case class ReplyRecord(text: String, createdAt: String, reply: ReplyObject) derives ReadWriter
 
-case class BlueskyRecord(text: String, createdAt: String)
+case class ReplyObject(root: PostReference, parent: PostReference) derives ReadWriter
 
-object BlueskyRecord:
-  implicit val bsRW: ReadWriter[BlueskyRecord] =  macroRW
+case class PostReference(uri: String, cid: String) derives ReadWriter
 
-// TODO: collection with default value to JSON
-private case class BlueskyCreateRecord(repo: String, collection: String, rkey: String = "", validate: Option[Boolean] = None, record: BlueskyRecord)
+private case class CreateRecord(repo: String, collection: String, rkey: String = "", validate: Boolean = false, record: Record) derives ReadWriter
 
-private object BlueskyCreateRecord:
-  implicit val bscrRW: ReadWriter[BlueskyCreateRecord] = macroRW
+private case class CreateReplyRecord(repo: String, collection: String, rkey: String = "", validate: Boolean = false, record: ReplyRecord) derives ReadWriter
 
 object Bluesky:
   private var refreshToken: String = uninitialized
@@ -74,17 +95,4 @@ object Bluesky:
     )
     refreshToken = jsonResponse("refreshJwt").str
     jsonResponse("accessJwt").str
-
-  def createRecord(session: BlueskySession, text: String, rkey: String = "", validate: Option[Boolean] = None): BCCResponse =
-    val message = BlueskyRecord(text, DateTime(DateTimeZone.getDefault).toString)
-    val newRecord = BlueskyCreateRecord(repo = session.handle, collection = "app.bsky.feed.post", record = message)
-    val newRecordString = write(newRecord)
-
-    basicRequest
-      .auth.bearer(session.accessJwt)
-      .contentType("application/json")
-      .body(newRecordString)
-      .post(uri"https://bsky.social/xrpc/com.atproto.repo.createRecord")
-      .response(asJson[BCCResponse].getRight)
-      .send(DefaultSyncBackend())
-      .body
+    

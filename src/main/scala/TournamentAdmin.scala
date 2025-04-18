@@ -1,9 +1,16 @@
 package de.qno.tournamentadmin
 
 import scala.util.*
+import scala.util.{Try, Success, Failure}
+import scala.collection.mutable.ListBuffer
+import scala.compiletime.uninitialized
+
 import org.joda.time.*
+
 import lichess.LichessInternalDataTypes.*
 import lichess.LichessApi
+import lichess.LichessApi.*
+import upickle.default.*
 
 /**
  * Main class of package. Provides static properties, types, and methods
@@ -17,7 +24,7 @@ object TournamentAdmin:
 
   private val lichessSecretsPath = os.pwd / "lichess.token"
   private val lichessSecrets = os.read.lines(lichessSecretsPath).iterator
-  val lichessSession = LichessApi(lichessSecrets.next(), lichessSecrets.next())
+  private val lichessSession = LichessApi(lichessSecrets.next(), lichessSecrets.next())
 
   private val blueskySecretsPath = os.pwd / "bluesky.token"
   private val blueskySecrets = os.read.lines(blueskySecretsPath).iterator
@@ -30,40 +37,52 @@ object TournamentAdmin:
   private def makeTwitterKey(cred: TwitterCredentials): String =
     java.net.URLEncoder.encode(cred.xApiKeySecret, java.nio.charset.Charset.defaultCharset()) + "&" + java.net.URLEncoder.encode(cred.xAccessTokenSecret, java.nio.charset.Charset.defaultCharset())
 
+  private def prepareMessages(): List[String] =
+    val preAnnouncementText = "Heutige Turniere:\n"
+    val preResultText = "Ergebnisse von gestern"
+    val announcements: String = preAnnouncementText + getTournamentAnnouncements(LocalDate(), lichessSession.teamId)
+    val results: Iterator[String] = getTournamentInfos(LocalDate(), lichessSession.teamId).iterator
+    val result: ListBuffer[String] = ListBuffer(announcements, (preResultText + results.next()))
+    while results.hasNext do 
+      result.addOne(results.next())
+    result.toList
+    
   /**
    * Construct and send a message announcing todays tournaments to
    * - the Lichess team
    * - the Bluesky account
    */
-  private def sendMessages(): Unit =
+  private def sendMessages(messages: List[String]): Unit =
     // TODO: pre and post text from file
     // Lichess has to be defined, else no tournaments!
-    val preAnnouncementText = "Heutige Turniere:"
-    val tournamenAnnouncementText = lichessSession.getTournamentAnnouncementDates().foldLeft(preAnnouncementText)(_ + "\n" + _)
-    val preResultText = "Ergebnisse von gestern:"
+    println(messages)
     
     if false then 
-      if tournamenAnnouncementText.nonEmpty then
+      if messages.nonEmpty then
         // Because a lichess account exists, announcements will always happen
         // TournamentInstance.create(lichessSession)
-        lichessSession.sendMessage(tournamenAnnouncementText)
+        lichessSession.sendMessage(messages.foldLeft("")(_ + _))
   
         blueskyCreds match
           case Success(cred) =>
+            val messagesIterator = messages.iterator
             val bsSession = Bluesky.createSession(cred.bsUser, cred.bsPassword)
-            Bluesky.createRecord(bsSession, tournamenAnnouncementText)
-          case _ => {}
+            val root: Response = bsSession.createRecord(messagesIterator.next())
+            var parent: Response = root
+            while messagesIterator.hasNext do 
+              parent = bsSession.createReply(text = messagesIterator.next(), rootPost = root, parentPost = parent)
+          case _ => 
   
-        twitterCreds match
-          case Success(cred) =>
-            Twitter.createPost(cred, tournamenAnnouncementText, makeTwitterKey(cred))
-          case _ => {}
+//        twitterCreds match
+//          case Success(cred) =>
+//            Twitter.createPost(cred, tournamenAnnouncementText, makeTwitterKey(cred))
+//          case _ => {}
   
-        print(tournamenAnnouncementText)
       end if
     end if
-    println(tournamenAnnouncementText)
+    //println(tournamenAnnouncementText)
     
   @main
   def main(): Unit =
-    sendMessages()
+    sendMessages(prepareMessages())
+      

@@ -42,10 +42,8 @@ build/
 .DS_Store
 
 ### Scala ###
-.bsp/
-worksheet.sc
+*.sc
 
 ### Project specific ###
-instances.json
-series.json
+*.json
 **/*.token

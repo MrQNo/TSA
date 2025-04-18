@@ -2,7 +2,7 @@ package de.qno.tournamentadmin
 
 import TournamentSeries.*
 import lichess.LichessApi
-import lichess.LichessInternalDataTypes.LichesSystem.{ARENA, SWISS}
+import lichess.LichessInternalDataTypes.System.{ARENA, SWISS}
 
 import org.joda.time.DateTime
 import org.joda.time.format.ISODateTimeFormat

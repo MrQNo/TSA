@@ -1,6 +1,6 @@
 package de.qno.tournamentadmin
 
-import lichess.LichessInternalDataTypes.LichesSystem
+import lichess.LichessInternalDataTypes.System
 
 import upickle.default.*
 
@@ -9,7 +9,7 @@ import upickle.default.*
  * class is immutable, and threadsafe
  */
 case class TournamentSeries (index: Int,
-                             tournamentType: LichesSystem,
+                             tournamentType: System,
                              title: String,
                              duration: Int,
                              description: String,
