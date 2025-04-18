@@ -39,13 +39,22 @@ object TournamentAdmin:
 
   private def prepareMessages(): List[String] =
     val preAnnouncementText = "Heutige Turniere:\n"
-    val preResultText = "Ergebnisse von gestern"
-    val announcements: String = preAnnouncementText + getTournamentAnnouncements(LocalDate(), lichessSession.teamId)
-    val results: Iterator[String] = getTournamentInfos(LocalDate(), lichessSession.teamId).iterator
-    val result: ListBuffer[String] = ListBuffer(announcements, (preResultText + results.next()))
-    while results.hasNext do 
-      result.addOne(results.next())
-    result.toList
+    val preResultText = "Ergebnisse von gestern:\n"
+    
+    val announcements: String = getTournamentAnnouncements(LocalDate(), lichessSession.teamId)
+    if announcements == "" then 
+      val fullAnnouncements = ""
+    else
+      val fullAnnouncements = preAnnouncementText ++ announcements
+      
+    val results: Iterator[String] = getTournamentInfos(LocalDate().minusDays(1), lichessSession.teamId).iterator
+    if results.hasNext then 
+      val result: ListBuffer[String] = ListBuffer(announcements, (preResultText + results.next()))
+      while results.hasNext do 
+        result.addOne(results.next())
+      result.toList
+    else
+     List("")  
     
   /**
    * Construct and send a message announcing todays tournaments to
@@ -55,7 +64,7 @@ object TournamentAdmin:
   private def sendMessages(messages: List[String]): Unit =
     // TODO: pre and post text from file
     // Lichess has to be defined, else no tournaments!
-    println(messages)
+    println(messages.foldLeft("")(_ + _))
     
     if false then 
       if messages.nonEmpty then
@@ -83,6 +92,8 @@ object TournamentAdmin:
     //println(tournamenAnnouncementText)
     
   @main
-  def main(): Unit =
+  def main(): Unit = {
+    //TournamentInstance.create(lichessSession)
     sendMessages(prepareMessages())
+  }
       

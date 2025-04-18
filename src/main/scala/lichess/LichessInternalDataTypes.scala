@@ -51,14 +51,14 @@ object LichessInternalDataTypes:
   abstract class ArenaInfo(id: String, fullName: String, rated: Boolean, berserkable: Boolean, clock: Clock,
                            minutes: Int, createdBy: String, system: String, secondsToStart: Int, secondsToFinish: Int, isFinished: Boolean, isRecentlyFinished: Boolean,
                            pairingsClosed: Boolean, startsAt: String, nbPlayers: Int, verdicts: Verdicts, quote: LichessQuote, hasMaxRating: Boolean,
-                           maxRating: LichessArenaRatingObj, minRating: LichessArenaRatingObj, minRatedGames: LichessMinRatedGames, botsAllowed: Boolean, minAccountAgeInDays: Int,
+                           maxRating: LichessArenaRatingObj, minRating: LichessArenaRatingObj, minRatedGames: MinRatedGames, botsAllowed: Boolean, minAccountAgeInDays: Int,
                            perf: LichessArenaPerfA, schedule: LichessSchedule, variant: VariantKey, duels: List[LichessDuels], standing: LichessStanding)
 
   case class ArenaSingleInfo(id: String, fullName: String, rated: Boolean = false, berserkable: Boolean = false, clock: Clock,
                              minutes: Int = 0, createdBy: String = "", system: String = "", secondsToStart: Int = 0, secondsToFinish: Int = 0, isFinished: Boolean = false, isRecentlyFinished: Boolean = false,
                              pairingsClosed: Boolean = false, startsAt: String = "", nbPlayers: Int, verdicts: Verdicts, quote: LichessQuote = LichessQuote("",""), hasMaxRating: Boolean = false,
-                             maxRating: LichessArenaRatingObj = LichessArenaRatingObj(PerfType.CLASSICAL, 10000), minRating: LichessArenaRatingObj = LichessArenaRatingObj(PerfType.CLASSICAL,0), minRatedGames: LichessMinRatedGames, botsAllowed: Boolean = false, minAccountAgeInDays: Int = 0,
-                             perf: LichessArenaPerfA, schedule: LichessSchedule, variant: VariantKey, duels: List[LichessDuels], standing: LichessStanding,
+                             maxRating: LichessArenaRatingObj = LichessArenaRatingObj(PerfType.CLASSICAL, 10000), minRating: LichessArenaRatingObj = LichessArenaRatingObj(PerfType.CLASSICAL,0), minRatedGames: MinRatedGames = MinRatedGames(0), botsAllowed: Boolean = false, minAccountAgeInDays: Int = 0,
+                             perf: LichessArenaPerfA, schedule: LichessSchedule = LichessSchedule("", ""), variant: VariantKey, duels: List[LichessDuels], standing: LichessStanding,
                              spotlight: LichessSpotlight = LichessSpotlight(""), onlyTitled: Boolean = false, allowList: Array[String] = Array()) extends ArenaInfo(
     id, fullName, rated, berserkable, clock, minutes, createdBy, system, secondsToStart, secondsToFinish, isFinished, isRecentlyFinished, pairingsClosed, startsAt, nbPlayers, verdicts, quote, hasMaxRating,
     maxRating, minRating, minRatedGames, botsAllowed, minAccountAgeInDays, perf, schedule, variant, duels, standing) derives ReadWriter:
@@ -79,7 +79,7 @@ object LichessInternalDataTypes:
   case class ArenaTeamInfo(id: String, fullName: String, rated: Boolean = false, berserkable: Boolean = false, clock: Clock,
                            minutes: Int = 0, createdBy: String = "", system: String = "", secondsToStart: Int = 0, secondsToFinish: Int = 0, isFinished: Boolean = false, isRecentlyFinished: Boolean = false,
                            pairingsClosed: Boolean = false, startsAt: String = "", nbPlayers: Int, verdicts: Verdicts, quote: LichessQuote = LichessQuote("",""), hasMaxRating: Boolean = false,
-                           maxRating: LichessArenaRatingObj = LichessArenaRatingObj(PerfType.CLASSICAL,10000), minRating: LichessArenaRatingObj = LichessArenaRatingObj(PerfType.CLASSICAL,0), minRatedGames: LichessMinRatedGames, botsAllowed: Boolean = false, minAccountAgeInDays: Int = 0,
+                           maxRating: LichessArenaRatingObj = LichessArenaRatingObj(PerfType.CLASSICAL,10000), minRating: LichessArenaRatingObj = LichessArenaRatingObj(PerfType.CLASSICAL,0), minRatedGames: MinRatedGames = MinRatedGames(0), botsAllowed: Boolean = false, minAccountAgeInDays: Int = 0,
                            perf: LichessArenaPerfA, schedule: LichessSchedule = LichessSchedule("",""), variant: VariantKey, duels: List[LichessDuels], standing: LichessStanding,
                            podium: Podium, teamStanding: List[LichessArenaTeamPerformance], teamBattle: ujson.Value) extends ArenaInfo(
     id, fullName, rated, berserkable, clock, minutes, createdBy, system, secondsToStart, secondsToFinish, isFinished, isRecentlyFinished, pairingsClosed, startsAt, nbPlayers, verdicts, quote, hasMaxRating,
@@ -162,19 +162,19 @@ object LichessInternalDataTypes:
         builder.append(players(i).toString())
       builder.toString
 
-  case class LichessArenaTournamentListEntry(id: String, createdBy: String, system: String, minutes: Integer, clock: Clock, rated: Boolean, fullName: String,
-                                             nbPlayers: Integer, variant: Variant, startsAt: Long, finishesAt: Long, status: Integer, perf: LichessArenaPerf, secondsToStart: Integer = 0,
-                                             hasMaxRating: Boolean = false, maxRating: LichessArenaRatingObj = LichessArenaRatingObj(PerfType.BLITZ, 0),
-                                             minRating: LichessArenaRatingObj = LichessArenaRatingObj(PerfType.BLITZ, 0),
-                                             minRatedGames: LichessMinRatedGames = LichessMinRatedGames(0), onlyTitled: Boolean = false, teamMember: String = "",
-                                             @upickle.implicits.key("private") privat: Boolean = false, position: LichessArenaPosition = LichessCustomPosition("", ""),
-                                             schedule: LichessSchedule = LichessSchedule("", ""), teamBattle: LichessTeamBattle = LichessTeamBattle(List[ujson.Value](), 0), winner: Winner = Winner("", "")) extends LichessTournamentListEntry:
+  case class ArenaTournamentListEntry(id: String, createdBy: String, system: String, minutes: Integer, clock: Clock, rated: Boolean, fullName: String,
+                                      nbPlayers: Integer, variant: Variant, startsAt: Long, finishesAt: Long, status: Integer, perf: LichessArenaPerf, secondsToStart: Integer = 0,
+                                      hasMaxRating: Boolean = false, maxRating: LichessArenaRatingObj = LichessArenaRatingObj(PerfType.BLITZ, 0),
+                                      minRating: LichessArenaRatingObj = LichessArenaRatingObj(PerfType.BLITZ, 0),
+                                      minRatedGames: MinRatedGames = MinRatedGames(0), onlyTitled: Boolean = false, teamMember: String = "",
+                                      @upickle.implicits.key("private") privat: Boolean = false, position: LichessArenaPosition = LichessCustomPosition("", ""),
+                                      schedule: LichessSchedule = LichessSchedule("", ""), teamBattle: LichessTeamBattle = LichessTeamBattle(List[ujson.Value](), 0), winner: Winner = Winner("", "")) extends LichessTournamentListEntry:
     def getStartTime: DateTime =
       DateTime(startsAt)
     def getName: String = fullName
     def getId: String = id
-  object LichessArenaTournamentListEntry:
-    implicit val latl: ReadWriter[LichessArenaTournamentListEntry] = macroRW
+  object ArenaTournamentListEntry:
+    implicit val latl: ReadWriter[ArenaTournamentListEntry] = macroRW
   
   case class Clock(limit: Integer, increment: Integer) derives ReadWriter
 
@@ -182,7 +182,7 @@ object LichessInternalDataTypes:
   
   case class LichessDuelInterna(n: String, r: Int, k: Int) derives ReadWriter
   
-  case class LichessMinRatedGames(nb: Integer = 0) derives ReadWriter
+  case class MinRatedGames(nb: Int = 0) derives ReadWriter
   
   case class LichessNB(game: Int, berserk: Int, win: Int) derives ReadWriter
   
@@ -201,9 +201,9 @@ object LichessInternalDataTypes:
   
   case class Stats(games: Integer, whiteWins: Integer, blackWins: Integer, draws: Integer, byes: Integer, absences: Integer, averageRating: Integer) derives ReadWriter
 
-  case class LichessSwissTournamentListEntry(id: String, createdBy: String, startsAt: String, name: String, clock: Clock, variant: String,
-                                             round: Integer, nbRounds: Integer, nbPlayers: Integer, nbOngoing: Integer, status: String, stats: Stats = Stats(0,0,0,0,0,0,0),
-                                             rated: Boolean, verdicts: Verdicts) extends LichessTournamentListEntry derives ReadWriter:
+  case class SwissTournamentListEntry(id: String, createdBy: String, startsAt: String, name: String, clock: Clock, variant: String,
+                                      round: Integer, nbRounds: Integer, nbPlayers: Integer, nbOngoing: Integer, status: String, stats: Stats = Stats(0,0,0,0,0,0,0),
+                                      rated: Boolean, verdicts: Verdicts = Verdicts(false, List[Verdict]())) extends LichessTournamentListEntry derives ReadWriter:
     def getStartTime: DateTime =
       val formatter: DateTimeFormatter = DateTimeFormat.forPattern("yyyy-MM-dd'T'HH:mm:ssZ")
       formatter.parseDateTime(startsAt)
@@ -218,7 +218,7 @@ object LichessInternalDataTypes:
     def getId: String
   
   //TODO: ReadWriter uses VariantKey
-  case class Variant(key: String, name: String, short: String)
+  case class Variant(key: String = "", name: String = "", short: String = "")
   object Variant:
     implicit val lat: ReadWriter[Variant] = macroRW
 
@@ -226,7 +226,7 @@ object LichessInternalDataTypes:
   object Verdict:
     implicit val lvo: ReadWriter[Verdict] = macroRW
 
-  case class Verdicts(accepted: Boolean, list: Array[Verdict])
+  case class Verdicts(accepted: Boolean, list: List[Verdict])
   object Verdicts:
     implicit val lvd: ReadWriter[Verdicts] = macroRW
 
