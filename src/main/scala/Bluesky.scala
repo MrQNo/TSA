@@ -22,7 +22,7 @@ case class BlueskySession(accessJwt: String,
                           active: Boolean = true,
                           status: String = "") derives ReadWriter:
 
-  def createRecord(text: String, rkey: String = "", validate: Boolean = false): Response =
+  private def createRecord(text: String, rkey: String = "", validate: Boolean = false): Response =
     val message = Record(text, DateTime(DateTimeZone.getDefault).toString)
     val newRecord = CreateRecord(repo = handle, collection = "app.bsky.feed.post", record = message)
   
@@ -35,7 +35,7 @@ case class BlueskySession(accessJwt: String,
       .send(DefaultSyncBackend())
       .body
     
-  def createReply(text: String, rkey: String = "", validate: Boolean = false, rootPost: Response, parentPost: Response): Response =
+  private def createReply(text: String, rkey: String = "", validate: Boolean = false, rootPost: Response, parentPost: Response): Response =
     val root = PostReference(rootPost.uri, rootPost.cid)
     val parent = PostReference(parentPost.uri, parentPost.cid)
     val replyObject = ReplyObject(root, parent)
@@ -117,13 +117,12 @@ object Bluesky:
    * Split message strings that are too long for social media in smaller parts at empty lines
    *
    * @param messages  An Array of message Strings
-   * @param maxLength maximal length allowed for a message at a social network
    * @return an Array of shortened message Strings
    */
   def shortenMessages(messages: List[String]): List[String] =
     messages.flatMap({
       m =>
-        if (m.length > BLUESKY_MAX_LENGTH) then
+        if m.length > BLUESKY_MAX_LENGTH then
           m.split("\n\n")
         else
           List(m)
