@@ -3,10 +3,12 @@ package lichess
 
 import scala.util.{Failure, Success, Try}
 import scala.collection.mutable.ListBuffer
+
 import org.joda.time.LocalDate
 import sttp.client4.*
 import sttp.client4.upicklejson.default.*
 import upickle.default.*
+
 import lichess.LichessInternalDataTypes.*
 
 //TODO: Move getters that do not need auth to object
