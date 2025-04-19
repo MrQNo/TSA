@@ -172,7 +172,7 @@ object LichessInternalDataTypes:
     implicit val latl: ReadWriter[ArenaTournamentListEntry] = macroRW
   
   //Team Arena related
-  case class Team(id: String, name: String, description: String = "", flair: String = "", leaders: List[LightUser], nbMembers: Int, open: Boolean, joined: Boolean, requested: Boolean) derives ReadWriter
+  case class Team(id: String, name: String, description: String = "", flair: String = "", leaders: List[LightUser] = List(), nbMembers: Int = 0, open: Boolean = false, joined: Boolean = false, requested: Boolean = false) derives ReadWriter
 
   case class ArenaTeamPerformance(rank: Int, id: String, score: Int, players: List[TeamPlayer])derives ReadWriter:
     def printString: String =

@@ -31,9 +31,9 @@ case class BlueskySession(accessJwt: String,
       .contentType("application/json")
       .body(write(newRecord))
       .post(uri"https://bsky.social/xrpc/com.atproto.repo.createRecord")
-      .response(asJson[Response].getRight)
+      .response(asJson[Response])
       .send(DefaultSyncBackend())
-      .body
+      .body.getOrElse(Response("", "", Commit("", ""), ""))
     
   private def createReply(text: String, rkey: String = "", validate: Boolean = false, rootPost: Response, parentPost: Response): Response =
     val root = PostReference(rootPost.uri, rootPost.cid)
@@ -47,9 +47,9 @@ case class BlueskySession(accessJwt: String,
       .contentType("application/json")
       .body(write[CreateReplyRecord](newRecord))
       .post(uri"https://bsky.social/xrpc/com.atproto.repo.createRecord")
-      .response(asJson[Response].getRight)
+      .response(asJson[Response])
       .send(DefaultSyncBackend())
-      .body
+      .body.getOrElse(Response("", "", Commit("", ""), ""))
 
   /**
    * Sends a List of Strings as a thread of messages.
@@ -97,16 +97,16 @@ object Bluesky:
       .contentType("application/json")
       .body(body)
       .post(uri"https://bsky.social/xrpc/com.atproto.server.createSession")
-      .response(asJson[tournamentadmin.BlueskySession].getRight)
+      .response(asJson[tournamentadmin.BlueskySession])
       .send(DefaultSyncBackend())
-      .body
+      .body.getOrElse(BlueskySession("", "", ""))
 
   def refreshSesson(): String =
     val jsonResponse: ujson.Value = ujson.read(
       basicRequest
       .auth.bearer(refreshToken)
       .post(uri"https://public.api.bsky.app/xrpc/com.atproto.server.refreshSession")
-      .response(asString.getRight)
+      .response(asStringAlways)
       .send(DefaultSyncBackend())
       .body
     )

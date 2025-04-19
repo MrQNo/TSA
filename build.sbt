@@ -1,8 +1,7 @@
-import sbtassembly.AssemblyPlugin.autoImport.*
 enablePlugins(UniversalPlugin)
 enablePlugins(JavaAppPackaging)
 
-ThisBuild / version := "2.0.0-alpha"
+ThisBuild / version := "2.0.0-beta3"
 ThisBuild / organization := "de.qno"
 ThisBuild / scalaVersion := "3.6.4"
 
@@ -17,9 +16,9 @@ lazy val root = (project in file("."))
     Universal / maintainer := "qno-github@qno.de"
   )
 
-libraryDependencies += "com.softwaremill.sttp.client4" %% "core" % "4.0.0-M14"
-libraryDependencies += "com.softwaremill.sttp.client4" %% "upickle" % "4.0.0-M14"
-libraryDependencies += "com.github.nscala-time" %% "nscala-time" % "2.32.0"
-libraryDependencies += "com.lihaoyi" %% "upickle" % "3.3.1"
-libraryDependencies += "com.lihaoyi" %% "os-lib" % "0.10.2"
+libraryDependencies += "com.softwaremill.sttp.client4" %% "core" % "4.0.3"
+libraryDependencies += "com.softwaremill.sttp.client4" %% "upickle" % "4.0.3"
+libraryDependencies += "com.github.nscala-time" %% "nscala-time" % "3.0.0"
+libraryDependencies += "com.lihaoyi" %% "upickle" % "4.1.0"
+libraryDependencies += "com.lihaoyi" %% "os-lib" % "0.11.4"
 

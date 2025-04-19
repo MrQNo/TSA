@@ -38,7 +38,7 @@ case class LichessApi(teamId: String, ltoken: String):
       .auth.bearer(ltoken)
       .body(creationMap)
       .post(uri"https://lichess.org/api/tournament")
-      .response(asString.getRight)
+      .response(asStringAlways)
       .send(DefaultSyncBackend())
       .body)("id").str
 
@@ -71,7 +71,7 @@ case class LichessApi(teamId: String, ltoken: String):
       .auth.bearer(ltoken)
       .body(creationMap)
       .post(uri"$composedUrl")
-      .response(asString.getRight)
+      .response(asStringAlways)
       .send(DefaultSyncBackend())
       .body)("id").str
 
@@ -106,7 +106,7 @@ case class LichessApi(teamId: String, ltoken: String):
       .auth.bearer(ltoken)
       .body(Map("message" -> text))
       .post(uri"$composedUrl")
-      .response(asString.getRight)
+      .response(asStringAlways)
       .send(DefaultSyncBackend())
       .body)
     resp("ok").bool
@@ -151,9 +151,9 @@ object LichessApi:
     val composedUrl: String = s"https://lichess.org/api/team/$teamId"
     basicRequest
       .get(uri"$composedUrl")
-      .response(asJson[Team].getRight)
+      .response(asJson[Team])
       .send(DefaultSyncBackend())
-      .body
+      .body.getOrElse(Team("", ""))
   
   /**
    * Get a List of Lichess Arena tournaments of a team at a date 
@@ -167,7 +167,7 @@ object LichessApi:
     val arenaList = ListBuffer[ArenaTournamentListEntry]()
     val stringIterator: Iterator[String] = basicRequest
       .get(uri"$composedUrl")
-      .response(asString.getRight)
+      .response(asStringAlways)
       .send(DefaultSyncBackend())
       .body
       .linesIterator
@@ -205,7 +205,7 @@ object LichessApi:
     val composedUrl: String = s"https://lichess.org/api/tournament/$id"
     val stri: String = basicRequest
       .get(uri"$composedUrl")
-      .response(asString.getRight)
+      .response(asStringAlways)
       .send(DefaultSyncBackend())
       .body
     val t: Try[String] =
@@ -232,7 +232,7 @@ object LichessApi:
     val swissList = ListBuffer[SwissTournamentListEntry]()
     val stringIterator: Iterator[String] = basicRequest
       .get(uri"$composedUrl")
-      .response(asString.getRight)
+      .response(asStringAlways)
       .send(DefaultSyncBackend())
       .body
       .linesIterator
@@ -264,15 +264,15 @@ object LichessApi:
     val composedUrl: String = s"https://lichess.org/api/swiss/$id"
     val info: SwissInfo = basicRequest
       .get(uri"$composedUrl")
-      .response(asJson[SwissInfo].getRight)
+      .response(asJson[SwissInfo])
       .send(DefaultSyncBackend())
-      .body
+      .body.getOrElse(SwissInfo("", "", "", "", Clock(0, 0), VariantKey.standard, 0, 0, 0, Status.FINISHED, Stats(0, 0, 0, 0, 0, 0, 0), false, Verdicts(false, List[Verdict]())))
     val composedUrl2: String = s"https://lichess.org/api/swiss/$id/results"
     val result: Array[SwissResult] = basicRequest
       .get(uri"$composedUrl2")
-      .response(asJson[Array[SwissResult]].getRight)
+      .response(asJson[Array[SwissResult]])
       .send(DefaultSyncBackend())
-      .body
+      .body.getOrElse(Array[SwissResult]())
     val buffer = StringBuilder(info.printString)
     for i <- 0 until math.min(3, result.length) do
       buffer.append(result(i).printString)

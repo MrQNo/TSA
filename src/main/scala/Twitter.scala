@@ -99,6 +99,6 @@ object Twitter:
       .contentType("application/json")
       .body(write(textObj))
       .post(uri"$createPostEndpoint")
-      .response(asJson[XCreatePostResponse].getRight)
+      .response(asJson[XCreatePostResponse])
       .send(DefaultSyncBackend())
-      .body
+      .body.getOrElse(XCreatePostResponse(XCreatePostResponse.XCreatePostResponseData("", "")))
