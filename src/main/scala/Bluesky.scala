@@ -50,7 +50,22 @@ case class BlueskySession(accessJwt: String,
       .response(asJson[Response].getRight)
       .send(DefaultSyncBackend())
       .body
-    
+
+  /**
+   * Sends a List of Strings as a thread of messages.
+   * 
+   * If a String is longer than the allowed size of a message, it is replaced by variou strings created by splitting it at empty lines.
+   * 
+   * @param messages a List of Strings containing the messages to post
+   */
+  def sendMessages(messages: List[String]): Unit =
+    val messagesIterator = Bluesky.shortenMessages(messages).iterator
+    val root: Response = createRecord(messagesIterator.next())
+    var parent: Response = root
+    while messagesIterator.hasNext do {
+      parent = createReply(text = messagesIterator.next(), rootPost = root, parentPost = parent)
+    }
+
 case class Response(uri: String, cid: String, commit: Commit, validationStatus: String = "") derives ReadWriter
 
 case class Commit(cid: String, rev: String) derives ReadWriter
@@ -68,6 +83,8 @@ private case class CreateRecord(repo: String, collection: String, rkey: String =
 private case class CreateReplyRecord(repo: String, collection: String, rkey: String = "", validate: Boolean = false, record: ReplyRecord) derives ReadWriter
 
 object Bluesky:
+  private val BLUESKY_MAX_LENGTH = 300
+
   private var refreshToken: String = uninitialized
 
   def createSession(user: String, password: String, authFactorToken: String = ""): BlueskySession =
@@ -95,4 +112,21 @@ object Bluesky:
     )
     refreshToken = jsonResponse("refreshJwt").str
     jsonResponse("accessJwt").str
+
+  /**
+   * Split message strings that are too long for social media in smaller parts at empty lines
+   *
+   * @param messages  An Array of message Strings
+   * @param maxLength maximal length allowed for a message at a social network
+   * @return an Array of shortened message Strings
+   */
+  def shortenMessages(messages: List[String]): List[String] =
+    messages.flatMap({
+      m =>
+        if (m.length > BLUESKY_MAX_LENGTH) then
+          m.split("\n\n")
+        else
+          List(m)
+    })
+    
     

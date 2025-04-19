@@ -20,6 +20,8 @@ import upickle.default.*
  * Of course you have to edit series.json and instances.json to fit to your tournaments.
  */
 object TournamentAdmin:
+  val TWITTER_MAX_LENGTH = 280
+  
   private val secrets = os.read.lines(os.pwd / "twitter.token").iterator
 
   private val lichessSecretsPath = os.pwd / "lichess.token"
@@ -27,12 +29,26 @@ object TournamentAdmin:
   private val lichessSession = LichessApi(lichessSecrets.next(), lichessSecrets.next())
 
   private val blueskySecretsPath = os.pwd / "bluesky.token"
-  private val blueskySecrets = os.read.lines(blueskySecretsPath).iterator
-  private val blueskyCreds: Try[BlueskyCredentials] = Try(BlueskyCredentials(blueskySecrets.next(), blueskySecrets.next()))
-
-  private val twitterSecretsPath = os.pwd / "twitter.token"
-  private val twitterSecrets = os.read.lines(twitterSecretsPath).iterator
-  private val twitterCreds: Try[TwitterCredentials] = Try(TwitterCredentials(twitterSecrets.next(), twitterSecrets.next(), twitterSecrets.next(), twitterSecrets.next()))
+  private val blueskyCreds: Option[BlueskyCredentials] = 
+    if os.exists(blueskySecretsPath) then
+      try
+        val blueskySecrets = os.read.lines(blueskySecretsPath).iterator
+        Some(BlueskyCredentials(blueskySecrets.next(), blueskySecrets.next()))
+      catch
+        case _ => None
+    else
+      None  
+    
+//  private val twitterSecretsPath = os.pwd / "twitter.token"
+//  private val twitterCreds: Option[TwitterCredentials] = 
+//    if os.exists(twitterSecretsPath) then
+//      try
+//        val twitterSecrets = os.read.lines(twitterSecretsPath).iterator
+//        Some(TwitterCredentials(twitterSecrets.next(), twitterSecrets.next(), twitterSecrets.next(), twitterSecrets.next()))
+//      catch
+//        case _ => None
+//    else
+//      None  
 
   private def makeTwitterKey(cred: TwitterCredentials): String =
     java.net.URLEncoder.encode(cred.xApiKeySecret, java.nio.charset.Charset.defaultCharset()) + "&" + java.net.URLEncoder.encode(cred.xAccessTokenSecret, java.nio.charset.Charset.defaultCharset())
@@ -47,7 +63,7 @@ object TournamentAdmin:
     else
       val fullAnnouncements = preAnnouncementText ++ announcements
       
-    val results: Iterator[String] = getTournamentInfos(LocalDate().minusDays(1), lichessSession.teamId).iterator
+    val results: Iterator[String] = getTournamentInfos(LocalDate().minusDays(2), lichessSession.teamId).iterator
     if results.hasNext then 
       val result: ListBuffer[String] = ListBuffer(announcements, (preResultText + results.next()))
       while results.hasNext do 
@@ -61,39 +77,34 @@ object TournamentAdmin:
    * - the Lichess team
    * - the Bluesky account
    */
-  private def sendMessages(messages: List[String]): Unit =
+  private def sendMessages(): Unit =
     // TODO: pre and post text from file
     // Lichess has to be defined, else no tournaments!
-    println(messages.foldLeft("")(_ + _))
+    val messages = prepareMessages()
     
-    if false then 
-      if messages.nonEmpty then
-        // Because a lichess account exists, announcements will always happen
-        // TournamentInstance.create(lichessSession)
-        lichessSession.sendMessage(messages.foldLeft("")(_ + _))
-  
-        blueskyCreds match
-          case Success(cred) =>
-            val messagesIterator = messages.iterator
-            val bsSession = Bluesky.createSession(cred.bsUser, cred.bsPassword)
-            val root: Response = bsSession.createRecord(messagesIterator.next())
-            var parent: Response = root
-            while messagesIterator.hasNext do 
-              parent = bsSession.createReply(text = messagesIterator.next(), rootPost = root, parentPost = parent)
-          case _ => 
-  
-//        twitterCreds match
-//          case Success(cred) =>
-//            Twitter.createPost(cred, tournamenAnnouncementText, makeTwitterKey(cred))
-//          case _ => {}
-  
-      end if
+    if messages.nonEmpty then
+      // Because a lichess account exists, announcements will always happen
+      // TournamentInstance.create(lichessSession)
+      // lichessSession.sendMessage(messages.foldLeft("")(_ + _))
+
+      blueskyCreds match
+        case Some(cred: BlueskyCredentials) =>
+          val bsSession = Bluesky.createSession(cred.bsUser, cred.bsPassword)
+          bsSession.sendMessages(messages)
+        case None => 
+
+//      twitterCreds match
+//        case Some(cred) =>
+//          val messagesIterator = shortenMessages(messages, TWITTER_MAX_LENGTH).iterator
+//          Twitter.createPost(cred, tournamenAnnouncementText, makeTwitterKey(cred))
+//        case None => {}
+
     end if
     //println(tournamenAnnouncementText)
     
   @main
   def main(): Unit = {
-    //TournamentInstance.create(lichessSession)
-    sendMessages(prepareMessages())
+    TournamentInstance.create(lichessSession)
+    sendMessages()
   }
       
