@@ -35,7 +35,7 @@ case class TournamentInstance(index: Int,
       (pointerTimes + 1) % series.limits.length,
       (pointerDays + 1) % series.nextDays.length)
 
-  def series: TournamentSeries =
+  private def series: TournamentSeries =
     val corrSer = TournamentSeries.seriesList.find(this.index == _.index)
     corrSer match
       case Some(x) => x

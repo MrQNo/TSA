@@ -1,16 +1,12 @@
 package de.qno.tournamentadmin
 
 import scala.util.*
-import scala.util.{Try, Success, Failure}
 import scala.collection.mutable.ListBuffer
-import scala.compiletime.uninitialized
 
 import org.joda.time.*
 
-import lichess.LichessInternalDataTypes.*
 import lichess.LichessApi
 import lichess.LichessApi.*
-import upickle.default.*
 
 /**
  * Main class of package. Provides static properties, types, and methods
@@ -20,9 +16,8 @@ import upickle.default.*
  * Of course you have to edit series.json and instances.json to fit to your tournaments.
  */
 object TournamentAdmin:
-  val TWITTER_MAX_LENGTH = 280
   
-  private val secrets = os.read.lines(os.pwd / "twitter.token").iterator
+  // private val secrets = os.read.lines(os.pwd / "twitter.token").iterator
 
   private val lichessSecretsPath = os.pwd / "lichess.token"
   private val lichessSecrets = os.read.lines(lichessSecretsPath).iterator
@@ -50,28 +45,30 @@ object TournamentAdmin:
 //    else
 //      None  
 
-  private def makeTwitterKey(cred: TwitterCredentials): String =
-    java.net.URLEncoder.encode(cred.xApiKeySecret, java.nio.charset.Charset.defaultCharset()) + "&" + java.net.URLEncoder.encode(cred.xAccessTokenSecret, java.nio.charset.Charset.defaultCharset())
+//  private def makeTwitterKey(cred: TwitterCredentials): String =
+//    java.net.URLEncoder.encode(cred.xApiKeySecret, java.nio.charset.Charset.defaultCharset()) + "&" + java.net.URLEncoder.encode(cred.xAccessTokenSecret, java.nio.charset.Charset.defaultCharset())
 
   private def prepareMessages(): List[String] =
     val preAnnouncementText = "Heutige Turniere:\n"
     val preResultText = "Ergebnisse von gestern:\n"
     
-    val announcements: String = getTournamentAnnouncements(LocalDate(), lichessSession.teamId)
-    if announcements == "" then 
-      val fullAnnouncements = ""
-    else
-      val fullAnnouncements = preAnnouncementText ++ announcements
-      
-    val results: Iterator[String] = getTournamentInfos(LocalDate().minusDays(2), lichessSession.teamId).iterator
-    if results.hasNext then 
-      val result: ListBuffer[String] = ListBuffer(announcements, (preResultText + results.next()))
-      while results.hasNext do 
-        result.addOne(results.next())
+    val announcements: String = 
+      val ann = getTournamentAnnouncements(LocalDate(), lichessSession.teamId)
+      if ann == "" then 
+        ""
+      else
+        preAnnouncementText ++ ann
+        
+    val results: List[String] = getTournamentInfos(LocalDate().minusDays(1), lichessSession.teamId)
+    val resultsIterator = results.iterator
+    if resultsIterator.hasNext then 
+      val result: ListBuffer[String] = ListBuffer(announcements, preResultText + resultsIterator.next())
+      while resultsIterator.hasNext do 
+        result.addOne(resultsIterator.next())
       result.toList
-    else
-     List("")  
-    
+    end if
+    announcements :: results  
+      
   /**
    * Construct and send a message announcing todays tournaments to
    * - the Lichess team

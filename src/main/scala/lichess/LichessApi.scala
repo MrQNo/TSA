@@ -9,8 +9,6 @@ import sttp.client4.upicklejson.default.*
 import upickle.default.*
 import lichess.LichessInternalDataTypes.*
 
-import org.joda.time.format.DateTimeFormatterBuilder
-
 //TODO: Move getters that do not need auth to object
 case class LichessApi(teamId: String, ltoken: String):
   /**
@@ -75,7 +73,7 @@ case class LichessApi(teamId: String, ltoken: String):
       .send(DefaultSyncBackend())
       .body)("id").str
 
-  def getArenaInfos(id: String): Either[String, String] =
+  private def getArenaInfos(id: String): Either[String, String] =
     val composedUrl: String = s"https://lichess.org/api/tournament/$id"
     basicRequest
       .auth.bearer(ltoken)
@@ -84,7 +82,7 @@ case class LichessApi(teamId: String, ltoken: String):
       .send(DefaultSyncBackend())
       .body
   
-  def getArenaInfoString(id: String, teamId: String): String =  
+  private def getArenaInfoString(id: String, teamId: String): String =  
     getArenaInfos(id) match
       case Right(s: String) => 
         val t: Try[String] =
@@ -92,7 +90,7 @@ case class LichessApi(teamId: String, ltoken: String):
           
         t match
           case Success(st) => st
-          case _ => read[ArenaSingleInfo](s).printString()
+          case _ => read[ArenaSingleInfo](s).printString
       case Left(s: String) => s
 
   /**
@@ -118,7 +116,7 @@ object LichessApi:
    * @param x a ujson.Value from a collection
    * @return true if "startsAt" equals tDate, false otherwise.
    */
-  private def hasThisDate(fDate: LocalDate)(x: LichessTournamentListEntry): Boolean =
+  private def hasThisDate(fDate: LocalDate)(x: TournamentListEntry): Boolean =
     LocalDate(x.getStartTime).equals(fDate)
 
   /**
@@ -127,7 +125,7 @@ object LichessApi:
    * @param x the LichessArenaTournamentList to map describing a tournament
    * @return a String containing starting time, name, and link to tournament
    */
-  private def announceString(x: LichessTournamentListEntry): String =
+  private def announceString(x: TournamentListEntry): String =
     val time: String = LocalDate(x.getStartTime).toString("HH:mm")
     val fullname = x.getName
     val idt = x.getId
@@ -138,7 +136,7 @@ object LichessApi:
    * @param x the LichessTournamentListEntry to map
    * @return the mapped String
    */
-  private def idString(x: LichessTournamentListEntry): String =
+  private def idString(x: TournamentListEntry): String =
     x.getId
 
   /**
@@ -162,7 +160,7 @@ object LichessApi:
    * @param tDate the Date of the requested tournaments            
    * @return a List of LichessArenaTournamentListEntry
    */
-  def fetchTeamsArenas(tDate: LocalDate, teamId: String): List[ArenaTournamentListEntry] =
+  private def fetchTeamsArenas(tDate: LocalDate, teamId: String): List[ArenaTournamentListEntry] =
     val composedUrl: String = s"https://lichess.org/api/team/$teamId/arena"
     val arenaList = ListBuffer[ArenaTournamentListEntry]()
     val stringIterator: Iterator[String] = basicRequest
@@ -184,12 +182,12 @@ object LichessApi:
    * @param teamId the team that owns the arenas
    * @return a List of Id Strings
    */
-  def getArenasIds(tDate: LocalDate, teamId: String): List[String] =
+  private def getArenasIds(tDate: LocalDate, teamId: String): List[String] =
     val lichessArenasList = fetchTeamsArenas(tDate, teamId)
     val lichessArenaIdsList = lichessArenasList.map(idString)
     lichessArenaIdsList
 
-  def getArenasAnnouncements(tlist: List[ArenaTournamentListEntry]): List[String] =
+  private def getArenasAnnouncements(tlist: List[ArenaTournamentListEntry]): List[String] =
     tlist.map(announceString)
 
   /**
@@ -201,7 +199,7 @@ object LichessApi:
    * @param teamId The Id of the team in question. Can be omitted in single player arenas and defaults to empty string
    * @return A String containing some Info and the first three placed players. In the case of a team tournament, the place of Team teamId and its 3 best players is added.
    */
-  def fetchArenaResult(id: String, teamId: String = ""): String =
+  private def fetchArenaResult(id: String, teamId: String = ""): String =
     val composedUrl: String = s"https://lichess.org/api/tournament/$id"
     val stri: String = basicRequest
       .get(uri"$composedUrl")
@@ -212,9 +210,9 @@ object LichessApi:
       Try(read[ArenaTeamInfo](stri).printString(teamId))
     t match
       case Success(va) => va
-      case Failure(ex) => read[ArenaSingleInfo](stri).printString()
+      case Failure(_) => read[ArenaSingleInfo](stri).printString
       
-  def getArenaInfos(ids: List[String], teamId: String = ""): List[String] =
+  private def getArenaInfos(ids: List[String], teamId: String = ""): List[String] =
     for
       id <- ids
     yield 
@@ -227,7 +225,7 @@ object LichessApi:
    * @param tDate the Date of the requested tournaments            
    * @return a List of LichessArenaTournamentListEntry
    */
-  def fetchTeamsSwiss(tDate: LocalDate, teamId: String): List[SwissTournamentListEntry] =
+  private def fetchTeamsSwiss(tDate: LocalDate, teamId: String): List[SwissTournamentListEntry] =
     val composedUrl: String = s"https://lichess.org/api/team/$teamId/swiss"
     val swissList = ListBuffer[SwissTournamentListEntry]()
     val stringIterator: Iterator[String] = basicRequest
@@ -248,10 +246,10 @@ object LichessApi:
    * @param teamId the team that owns the arenas
    * @return a List of Id Strings
    */
-  def getSwissIds(tDate: LocalDate, teamId: String): List[String] =
+  private def getSwissIds(tDate: LocalDate, teamId: String): List[String] =
     fetchTeamsSwiss(tDate, teamId).map(idString)
 
-  def getSwissAnnouncements(tlist: List[SwissTournamentListEntry]): List[String] =
+  private def getSwissAnnouncements(tlist: List[SwissTournamentListEntry]): List[String] =
     tlist.map(announceString)
 
   /**
@@ -260,7 +258,7 @@ object LichessApi:
    * @param id the Id of the tournament
    * @return A String containing some Info and the first three placed players.
    */
-  def fetchSwissResult(id: String): String =
+  private def fetchSwissResult(id: String): String =
     val composedUrl: String = s"https://lichess.org/api/swiss/$id"
     val info: SwissInfo = basicRequest
       .get(uri"$composedUrl")
@@ -269,16 +267,16 @@ object LichessApi:
       .body
     val composedUrl2: String = s"https://lichess.org/api/swiss/$id/results"
     val result: Array[SwissResult] = basicRequest
-      .get(uri"$composedUrl")
+      .get(uri"$composedUrl2")
       .response(asJson[Array[SwissResult]].getRight)
       .send(DefaultSyncBackend())
       .body
-    val buffer = StringBuilder(info.printString())
+    val buffer = StringBuilder(info.printString)
     for i <- 0 until math.min(3, result.length) do
-      buffer.append(result(i).printString())
+      buffer.append(result(i).printString)
     buffer.toString()
 
-  def getSwissInfos(ids: List[String], teamId: String = ""): List[String] =
+  private def getSwissInfos(ids: List[String], teamId: String = ""): List[String] =
     for
       id <- ids
     yield
@@ -291,16 +289,3 @@ object LichessApi:
     val arenaIdList = getArenasIds(tDate, teamId)
     val swissIdList = getSwissIds(tDate, teamId)
     getArenaInfos(arenaIdList, teamId) ++ getSwissInfos(swissIdList, teamId)
-    
-  @main
-  def testMain(): Unit =
-    val p: os.Path = os.pwd / "arena"
-    val s = os.read.lines(p).iterator
-    var l = List[ArenaTournamentListEntry]()
-    while s.hasNext do { 
-      val x = s.next
-      println(x)
-      l = read[ArenaTournamentListEntry](x) :: l
-    }
-    println(l)  
-    
