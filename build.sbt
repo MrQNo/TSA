@@ -1,7 +1,7 @@
 enablePlugins(UniversalPlugin)
 enablePlugins(JavaAppPackaging)
 
-ThisBuild / version := "2.0.0-beta3"
+ThisBuild / version := "2.0.0-beta4"
 ThisBuild / organization := "de.qno"
 ThisBuild / scalaVersion := "3.6.4"
 

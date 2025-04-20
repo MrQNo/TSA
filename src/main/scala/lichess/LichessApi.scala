@@ -4,7 +4,7 @@ package lichess
 import scala.util.{Failure, Success, Try}
 import scala.collection.mutable.ListBuffer
 
-import org.joda.time.LocalDate
+import org.joda.time.{LocalDate, DateTime}
 import sttp.client4.*
 import sttp.client4.upicklejson.default.*
 import upickle.default.*
@@ -128,7 +128,7 @@ object LichessApi:
    * @return a String containing starting time, name, and link to tournament
    */
   private def announceString(x: TournamentListEntry): String =
-    val time: String = LocalDate(x.getStartTime).toString("HH:mm")
+    val time: String = DateTime(x.getStartTime).toString("HH:mm")
     val fullname = x.getName
     val idt = x.getId
     s"$time Uhr: $fullname https://lichess.org/tournament/$idt\n"
@@ -140,6 +140,12 @@ object LichessApi:
    */
   private def idString(x: TournamentListEntry): String =
     x.getId
+  
+  private def isBlank(str: String): Boolean =
+    if str.trim().length() == 0 then
+      true
+    else
+      false  
 
   /**
    * Gets all description items to a teamId
@@ -211,8 +217,10 @@ object LichessApi:
     val t: Try[String] =
       Try(read[ArenaTeamInfo](stri).printString(teamId))
     t match
-      case Success(va) => va
-      case Failure(_) => read[ArenaSingleInfo](stri).printString
+      case Success(succ) =>
+        succ
+      case Failure(_) => 
+        read[ArenaSingleInfo](stri).printString
       
   private def getArenaInfos(ids: List[String], teamId: String = ""): List[String] =
     for
@@ -285,7 +293,7 @@ object LichessApi:
       fetchSwissResult(id)
 
   def getTournamentAnnouncements(tDate: LocalDate = LocalDate(), teamId: String): String =
-    (getArenasAnnouncements(fetchTeamsArenas(tDate, teamId)) ::: getSwissAnnouncements(fetchTeamsSwiss(tDate, teamId))).sorted.foldLeft("")(_ + '\n' + _)
+    (getArenasAnnouncements(fetchTeamsArenas(tDate, teamId)) ::: getSwissAnnouncements(fetchTeamsSwiss(tDate, teamId))).sorted.filterNot(isBlank(_)).foldLeft("")(_ + '\n' + _)
 
   def getTournamentInfos(tDate: LocalDate = LocalDate(), teamId: String): List[String] =
     val arenaIdList = getArenasIds(tDate, teamId)

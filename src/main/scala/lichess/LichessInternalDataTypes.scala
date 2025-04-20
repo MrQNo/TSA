@@ -97,8 +97,8 @@ object LichessInternalDataTypes:
         .appendMinuteOfHour(2)
         .toFormatter
       val buffer = StringBuilder(s"$fullName ${fmt.print(DateTime(startsAt))}\n")
-      for i <- 0 until math.min(3, teamStanding.length) do
-        buffer.append(teamStanding(i))
+      for stand <- teamStanding.take(3) do
+        buffer.append(stand.printString)
       val ownTeam = teamStanding.filter(_.id == team).head
       buffer.append("\n" + ownTeam.teamPerformance())
       buffer.toString
@@ -133,8 +133,8 @@ object LichessInternalDataTypes:
   case class Standing(page: Int, players: Array[ArenaPlayerPerformance]) derives ReadWriter:
     override def toString: String =
       val buffer = new StringBuilder()
-      for i <- 0 until math.min(3, players.length) do
-        buffer.append(players(i).toString)
+      for player <- players.take(3) do
+        buffer.append(player.printString)
       buffer.toString
 
   // Arena related
@@ -144,7 +144,7 @@ object LichessInternalDataTypes:
 
   case class ArenaPlayerPerformance(name: String, rank: Int, title: String = "", patron: Boolean = false, flair: String = "", rating: Int = 0, score: Int,
                                     sheet: ArenaSheet = ArenaSheet("", false), nb: Nb = Nb(0,0,0), performance: Int = 0, team: String = "") derives ReadWriter:
-    override def toString: String =
+    def printString: String =
       s"$rank. $name $score\n"
 
   sealed trait ArenaPosition derives ReadWriter
@@ -182,7 +182,7 @@ object LichessInternalDataTypes:
       val builder = StringBuilder()
       builder.append(s"Team $id belegte Platz $rank mit $score Punkten.\n")
       builder.append("Die besten Spieler waren: \n")
-      for player <- players do
+      for player <- players.take(3) do
         builder.append(player.printString)
       builder.toString
 

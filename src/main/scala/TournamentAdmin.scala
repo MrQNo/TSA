@@ -67,6 +67,7 @@ object TournamentAdmin:
         result.addOne(resultsIterator.next())
       result.toList
     end if
+    
     announcements :: results  
       
   /**
@@ -76,14 +77,13 @@ object TournamentAdmin:
    */
   private def sendMessages(): Unit =
     // TODO: pre and post text from file
-    // Lichess has to be defined, else no tournaments!
     val messages = prepareMessages()
     
-    if messages.nonEmpty then
-      // Because a lichess account exists, announcements will always happen
-      // TournamentInstance.create(lichessSession)
-      // lichessSession.sendMessage(messages.foldLeft("")(_ + _))
+    // Because a lichess account exists, announcements will always happen
+    TournamentInstance.create(lichessSession)
 
+    if messages.nonEmpty then
+      lichessSession.sendMessage(messages.foldLeft("")(_ + _))
       blueskyCreds match
         case Some(cred: BlueskyCredentials) =>
           val bsSession = Bluesky.createSession(cred.bsUser, cred.bsPassword)
@@ -97,11 +97,11 @@ object TournamentAdmin:
 //        case None => {}
 
     end if
-    //println(tournamenAnnouncementText)
+    println(messages)
     
   @main
   def main(): Unit = {
-    TournamentInstance.create(lichessSession)
+    // TournamentInstance.create(lichessSession)
     sendMessages()
   }
       
