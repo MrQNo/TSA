@@ -15,6 +15,8 @@ import lichess.LichessApi.*
  * Change IDs to your need. No other changes should be necessary.
  * Of course you have to edit series.json and instances.json to fit to your tournaments.
  */
+case class TournamentAdmin(i: Int)
+
 object TournamentAdmin:
   
   // private val secrets = os.read.lines(os.pwd / "twitter.token").iterator
