@@ -51,7 +51,7 @@ object TournamentAdmin:
 //    java.net.URLEncoder.encode(cred.xApiKeySecret, java.nio.charset.Charset.defaultCharset()) + "&" + java.net.URLEncoder.encode(cred.xAccessTokenSecret, java.nio.charset.Charset.defaultCharset())
 
   private def prepareMessages(): List[String] =
-    val preAnnouncementText = "Heutige Turniere:\n"
+    val preAnnouncementText = "Heutige Turniere:"
     val preResultText = "Ergebnisse von gestern:\n"
     
     val announcements: String = 
@@ -63,14 +63,19 @@ object TournamentAdmin:
         
     val results: List[String] = getTournamentInfos(LocalDate().minusDays(1), lichessSession.teamId)
     val resultsIterator = results.iterator
+    val result: ListBuffer[String] = ListBuffer()
     if resultsIterator.hasNext then 
-      val result: ListBuffer[String] = ListBuffer(announcements, preResultText + resultsIterator.next())
+      result.addOne(preResultText + resultsIterator.next())
       while resultsIterator.hasNext do 
         result.addOne(resultsIterator.next())
-      result.toList
     end if
-    
-    announcements :: results  
+    val resultList = result.toList
+    announcements :: 
+      {if announcements.isEmpty || resultList.isEmpty then 
+        resultList 
+      else 
+        "\n" :: resultList
+      }  
       
   /**
    * Construct and send a message announcing todays tournaments to
@@ -82,16 +87,16 @@ object TournamentAdmin:
     val messages = prepareMessages()
     
     // Because a lichess account exists, announcements will always happen
-    TournamentInstance.create(lichessSession)
+    // TournamentInstance.create(lichessSession)
 
-    if messages.nonEmpty then
-      lichessSession.sendMessage(messages.foldLeft("")(_ + _))
-      blueskyCreds match
-        case Some(cred: BlueskyCredentials) =>
-          val bsSession = Bluesky.createSession(cred.bsUser, cred.bsPassword)
-          bsSession.sendMessages(messages)
-        case None => 
-
+    if messages.nonEmpty then {}
+//      lichessSession.sendMessage(messages.foldLeft("")(_ + _))
+//      blueskyCreds match
+//        case Some(cred: BlueskyCredentials) =>
+//          val bsSession = Bluesky.createSession(cred.bsUser, cred.bsPassword)
+//          bsSession.sendMessages(messages)
+//        case None => 
+//
 //      twitterCreds match
 //        case Some(cred) =>
 //          val messagesIterator = shortenMessages(messages, TWITTER_MAX_LENGTH).iterator
@@ -103,7 +108,7 @@ object TournamentAdmin:
     
   @main
   def main(): Unit = {
-    // TournamentInstance.create(lichessSession)
+    TournamentInstance.create(lichessSession)
     sendMessages()
   }
       
