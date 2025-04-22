@@ -87,16 +87,16 @@ object TournamentAdmin:
     val messages = prepareMessages()
     
     // Because a lichess account exists, announcements will always happen
-    // TournamentInstance.create(lichessSession)
+    TournamentInstance.create(lichessSession)
 
-    if messages.nonEmpty then {}
-//      lichessSession.sendMessage(messages.foldLeft("")(_ + _))
-//      blueskyCreds match
-//        case Some(cred: BlueskyCredentials) =>
-//          val bsSession = Bluesky.createSession(cred.bsUser, cred.bsPassword)
-//          bsSession.sendMessages(messages)
-//        case None => 
-//
+    if messages.nonEmpty then
+      lichessSession.sendMessage(messages.foldLeft("")(_ + _))
+      blueskyCreds match
+        case Some(cred: BlueskyCredentials) =>
+          val bsSession = Bluesky.createSession(cred.bsUser, cred.bsPassword)
+          bsSession.sendMessages(messages)
+        case None => 
+
 //      twitterCreds match
 //        case Some(cred) =>
 //          val messagesIterator = shortenMessages(messages, TWITTER_MAX_LENGTH).iterator

@@ -1,4 +1,4 @@
-ThisBuild / version := "2.0.0-beta5"
+ThisBuild / version := "2.0.0-beta7"
 ThisBuild / organization := "de.qno"
 ThisBuild / scalaVersion := "3.6.4"
 
@@ -6,7 +6,7 @@ lazy val root = (project in file("."))
   .settings(
     name := "TournamentAdmin",
     idePackagePrefix := Some("de.qno.tournamentadmin"),
-    assembly / assemblyJarName := "TSA-new.jar"
+    assembly / assemblyJarName := "TSA.jar"
   )
 
 libraryDependencies += "com.softwaremill.sttp.client4" %% "core" % "4.0.3"
