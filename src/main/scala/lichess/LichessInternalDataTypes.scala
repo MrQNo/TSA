@@ -31,9 +31,9 @@ object LichessInternalDataTypes:
     case THREECHECK extends PerfType("threeCheck")
 
   enum Status(status: Integer) derives ReadWriter:
-    case CREATED extends Status(10)
-    case STARTED extends Status(20)
-    case FINISHED extends Status(30)
+    case created extends Status(10)
+    case started extends Status(20)
+    case finished extends Status(30)
 
   enum VariantKey(variant: String) derives ReadWriter:
     case standard extends VariantKey("standard")
@@ -117,7 +117,8 @@ object LichessInternalDataTypes:
         .appendLiteral(':')
         .appendMinuteOfHour(2)
         .toFormatter
-      s"$name ${fmt.print(DateTime(startsAt))}\n"
+      val fmt2 = ISODateTimeFormat.dateTimeNoMillis()
+      s"$name ${fmt.print(fmt2.parseDateTime(startsAt))}\n"
       
   case class SwissResult(absent: Boolean = false, rank: Int, points: Int, tieBreak: Int, rating: Int, username: Int, title: String = "", performance: Int) derives ReadWriter:
     def printString: String =
@@ -176,7 +177,7 @@ object LichessInternalDataTypes:
 
   case class ArenaTeamPerformance(rank: Int, id: String, score: Int, players: List[TeamPlayer])derives ReadWriter:
     def printString: String =
-      s"$rank. ${LichessApi.fetchTeam(id).name} $score\n"
+      s"$rank. ${de.qno.tournamentadmin.lichess.LichessApi.fetchTeam(id).name} $score\n"
 
     def teamPerformance(): String =
       val builder = StringBuilder()

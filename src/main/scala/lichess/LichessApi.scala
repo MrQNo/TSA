@@ -274,7 +274,7 @@ object LichessApi:
       .get(uri"$composedUrl")
       .response(asJson[SwissInfo])
       .send(DefaultSyncBackend())
-      .body.getOrElse(SwissInfo("", "", "", "", Clock(0, 0), VariantKey.standard, 0, 0, 0, Status.FINISHED, Stats(0, 0, 0, 0, 0, 0, 0), false, Verdicts(false, List[Verdict]())))
+      .body.getOrElse(SwissInfo("", "", "", "", Clock(0, 0), VariantKey.standard, 0, 0, 0, Status.finished, Stats(0, 0, 0, 0, 0, 0, 0), false, Verdicts(false, List[Verdict]())))
     val composedUrl2: String = s"https://lichess.org/api/swiss/$id/results"
     val result: Array[SwissResult] = basicRequest
       .get(uri"$composedUrl2")
