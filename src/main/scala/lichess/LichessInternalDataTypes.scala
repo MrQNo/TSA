@@ -1,8 +1,11 @@
 package de.qno.tournamentadmin
 package lichess
 
+import de.qno.tournamentadmin.lichess.LichessInternalDataTypes.SwissResult
 import org.joda.time.*
 import org.joda.time.format.*
+import sttp.client4.*
+import sttp.client4.upicklejson.default.*
 import upickle.default.*
 
 object LichessInternalDataTypes:
@@ -120,7 +123,7 @@ object LichessInternalDataTypes:
       val fmt2 = ISODateTimeFormat.dateTimeNoMillis()
       s"$name ${fmt.print(fmt2.parseDateTime(startsAt))}\n"
       
-  case class SwissResult(absent: Boolean = false, rank: Int, points: Int, tieBreak: Int, rating: Int, username: Int, title: String = "", performance: Int) derives ReadWriter:
+  case class SwissResult(absent: Boolean = false, rank: Int, points: Int, tieBreak: Int, rating: Int, username: String, title: String = "", performance: Int = 0) derives ReadWriter:
     def printString: String =
       s"$rank. $title $username $points\n"
         

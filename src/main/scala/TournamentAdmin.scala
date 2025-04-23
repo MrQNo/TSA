@@ -70,13 +70,13 @@ object TournamentAdmin:
         result.addOne(resultsIterator.next())
     end if
     val resultList = result.toList
-    announcements :: 
-      {if announcements.isEmpty || resultList.isEmpty then 
-        resultList 
-      else 
-        "\n" :: resultList
-      }  
-      
+    if announcements.isEmpty then
+      resultList
+    else
+      if resultList.isEmpty then
+        List(announcements)
+      else
+        announcements+"\n" :: resultList
   /**
    * Construct and send a message announcing todays tournaments to
    * - the Lichess team
@@ -87,9 +87,9 @@ object TournamentAdmin:
     val messages = prepareMessages()
     
     // Because a lichess account exists, announcements will always happen
-    TournamentInstance.create(lichessSession)
+    //TournamentInstance.create(lichessSession)
 
-    if messages.nonEmpty then
+    if messages.nonEmpty then 
       lichessSession.sendMessage(messages.foldLeft("")(_ + _))
       blueskyCreds match
         case Some(cred: BlueskyCredentials) =>

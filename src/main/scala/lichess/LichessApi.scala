@@ -276,14 +276,18 @@ object LichessApi:
       .send(DefaultSyncBackend())
       .body.getOrElse(SwissInfo("", "", "", "", Clock(0, 0), VariantKey.standard, 0, 0, 0, Status.finished, Stats(0, 0, 0, 0, 0, 0, 0), false, Verdicts(false, List[Verdict]())))
     val composedUrl2: String = s"https://lichess.org/api/swiss/$id/results"
-    val result: Array[SwissResult] = basicRequest
+    val result = basicRequest
       .get(uri"$composedUrl2")
-      .response(asJson[Array[SwissResult]])
+      .response(asString)
       .send(DefaultSyncBackend())
-      .body.getOrElse(Array[SwissResult]())
+      .body
+    val trueResult = result match
+      case Right(res) => res
+      case _ => "Unsinn"
+    val resultList = trueResult.split("\n").toList
     val buffer = StringBuilder(info.printString)
-    for i <- 0 until math.min(3, result.length) do
-      buffer.append(result(i).printString)
+    for res <- resultList.take(3) do
+      buffer.append(read[SwissResult](res).printString)
     buffer.toString()
 
   private def getSwissInfos(ids: List[String], teamId: String = ""): List[String] =
