@@ -97,7 +97,7 @@ object Bluesky:
       .contentType("application/json")
       .body(body)
       .post(uri"https://bsky.social/xrpc/com.atproto.server.createSession")
-      .response(asJson[tournamentadmin.BlueskySession])
+      .response(asJson[BlueskySession])
       .send(DefaultSyncBackend())
       .body.getOrElse(BlueskySession("", "", ""))
 

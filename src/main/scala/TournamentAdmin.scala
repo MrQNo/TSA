@@ -35,7 +35,18 @@ object TournamentAdmin:
         case _ => None
     else
       None  
-    
+  
+  private val mastodonSecretsPath = os.pwd / "mastodon.token"
+  private val mastodonAccessToken: Option[String] =
+    if os.exists(mastodonSecretsPath) then
+      try
+        val mastodonSecrets = os.read.lines(mastodonSecretsPath).iterator
+        Some(mastodonSecrets.next())
+      catch
+        case _ => None
+    else
+      None
+        
 //  private val twitterSecretsPath = os.pwd / "twitter.token"
 //  private val twitterCreds: Option[TwitterCredentials] = 
 //    if os.exists(twitterSecretsPath) then
@@ -82,7 +93,7 @@ object TournamentAdmin:
    * - the Lichess team
    * - the Bluesky account
    */
-  private def sendMessages(): Unit =
+  def sendMessages(): Unit =
     // TODO: pre and post text from file
     val messages = prepareMessages()
     
@@ -96,6 +107,10 @@ object TournamentAdmin:
           val bsSession = Bluesky.createSession(cred.bsUser, cred.bsPassword)
           bsSession.sendMessages(messages)
         case None => 
+      mastodonAccessToken match 
+        case Some(act: String) =>
+          Mastodon.post(act, messages)
+        case None =>
 
 //      twitterCreds match
 //        case Some(cred) =>
@@ -104,11 +119,13 @@ object TournamentAdmin:
 //        case None => {}
 
     end if
-    println(messages)
+  
+  def createTournaments() =
+    TournamentInstance.create(lichessSession)  
     
-  @main
-  def main(): Unit = {
-    TournamentInstance.create(lichessSession)
-    sendMessages()
-  }
+@main
+def main(): Unit = {
+  TournamentAdmin.createTournaments()
+  TournamentAdmin.sendMessages()
+}
       
